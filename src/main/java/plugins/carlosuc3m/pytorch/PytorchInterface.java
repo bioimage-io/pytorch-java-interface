@@ -45,13 +45,13 @@ public class PytorchInterface implements DeepLearningInterface
     }
 
 	@Override
-	public List<Tensor> run(List<Tensor> inputTensors, List<Tensor> outputTensors) throws RunModelException {
+	public List<Tensor<?>> run(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors) throws RunModelException {
 		try (NDManager manager = NDManager.newBaseManager())
         {
 			// Create the input lists of engine tensors (NDArrays) and their corresponding names
             NDList inputList = new NDList();
             List<String> inputListNames = new ArrayList<String>();
-            for (Tensor tt : inputTensors) {
+            for (Tensor<?> tt : inputTensors) {
             	inputListNames.add(tt.getName());
             	inputList.add(NDarrayBuilder.build(tt, manager));
             }
@@ -109,7 +109,7 @@ public class PytorchInterface implements DeepLearningInterface
 	 * @throws RunModelException If the number of tensors expected is not the same as the number of
 	 * 	Tensors outputed by the model
 	 */
-	public static List<Tensor> fillOutputTensors(NDList outputNDArrays, List<Tensor> outputTensors) throws RunModelException{
+	public static List<Tensor<?>> fillOutputTensors(NDList outputNDArrays, List<Tensor<?>> outputTensors) throws RunModelException{
 		if (outputNDArrays.size() != outputTensors.size())
 			throw new RunModelException(outputNDArrays.size(), outputTensors.size());
 		for (int i = 0; i < outputNDArrays.size(); i ++) {
