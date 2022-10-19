@@ -2,17 +2,21 @@ package org.bioimageanalysis.icy.pytorch.tensor;
 
 import org.bioimageanalysis.icy.deeplearning.tensor.RaiArrayUtils;
 import org.bioimageanalysis.icy.deeplearning.tensor.Tensor;
+import org.bioimageanalysis.icy.deeplearning.utils.IndexingUtils;
 
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
 import ai.djl.ndarray.types.Shape;
+import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
+import net.imglib2.view.IntervalView;
 
 
 public class NDarrayBuilder {
@@ -115,8 +119,31 @@ public class NDarrayBuilder {
     private static <T extends Type<T>> NDArray buildFromTensorFloat(RandomAccessibleInterval<FloatType> tensor, NDManager manager)
     {
     	long[] tensorShape = tensor.dimensionsAsLongArray();
+    	Cursor<FloatType> tensorCursor;
+		if (tensor instanceof IntervalView)
+			tensorCursor = ((IntervalView<FloatType>) tensor).cursor();
+		else if (tensor instanceof Img)
+			tensorCursor = ((Img<FloatType>) tensor).cursor();
+		else
+			throw new IllegalArgumentException("The data of the " + Tensor.class + " has "
+					+ "to be an instance of " + Img.class + " or " + IntervalView.class);
+		long flatSize = 1;
+		for (long dd : tensor.dimensionsAsLongArray()) { flatSize *= dd;}
+		float[] flatArr = new float[(int) flatSize];
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	float val = tensorCursor.get().getRealFloat();
+        	flatArr[flatPos] = val;
+		}
+	 	NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
+	 	return ndarray;
+    	/*
+    	long[] tensorShape = tensor.dimensionsAsLongArray();
 	 	NDArray ndarray = manager.create(RaiArrayUtils.floatArray(tensor), new Shape(tensorShape));
 	 	return ndarray;
+	 	*/
     }
 
     /**

@@ -1,13 +1,20 @@
 package org.bioimageanalysis.icy.pytorch.tensor;
 
+import org.bioimageanalysis.icy.deeplearning.utils.IndexingUtils;
+
 import ai.djl.ndarray.NDArray;
+import ai.djl.ndarray.types.Shape;
+import net.imglib2.Cursor;
 import net.imglib2.img.Img;
+import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.view.IntervalView;
 
 public class ImgLib2Builder {
 
@@ -75,8 +82,23 @@ public class ImgLib2Builder {
      */
     private static Img<FloatType> buildFromTensorFloat(NDArray tensor)
     {
+    	long[] tensorShape = tensor.getShape().getShape();
+    	final ImgFactory< FloatType > factory = new CellImgFactory<>( new FloatType(), 5 );
+        final Img< FloatType > outputImg = (Img<FloatType>) factory.create(tensorShape);
+    	Cursor<FloatType> tensorCursor= outputImg.cursor();
+		float[] flatArr = tensor.toFloatArray();
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	float val = flatArr[flatPos];
+        	tensorCursor.get().set(val);
+		}
+	 	return outputImg;
+    	/*
 		long[] tensorShape = tensor.getShape().getShape();
 		return ArrayImgs.floats(tensor.toFloatArray(), tensorShape);
+		*/
     }
 
     /**
