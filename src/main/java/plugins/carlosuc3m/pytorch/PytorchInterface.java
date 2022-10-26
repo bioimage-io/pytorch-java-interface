@@ -87,7 +87,7 @@ public class PytorchInterface implements DeepLearningInterface
 		} catch (Exception e) {
 			e.printStackTrace();
 			managePytorchExceptions(e);
-			throw new LoadModelException("Error loading a Pytorch model", e.getMessage());
+			throw new LoadModelException("Error loading a Pytorch model", e.getCause().toString());
 		}
 	}
 

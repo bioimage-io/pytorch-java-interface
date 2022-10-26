@@ -1,6 +1,5 @@
 package org.bioimageanalysis.icy.pytorch.tensor;
 
-import org.bioimageanalysis.icy.deeplearning.tensor.RaiArrayUtils;
 import org.bioimageanalysis.icy.deeplearning.tensor.Tensor;
 import org.bioimageanalysis.icy.deeplearning.utils.IndexingUtils;
 
@@ -83,12 +82,29 @@ public class NDarrayBuilder {
      *        {@link NDManager} needed to create NDArrays
      * @return The NDArray built from the tensor of type {@link DataType#UBYTE}.
      */
-    private static <T extends Type<T>> NDArray buildFromTensorByte(RandomAccessibleInterval<ByteType> tensor, NDManager manager)
+    private static NDArray buildFromTensorByte(RandomAccessibleInterval<ByteType> tensor, NDManager manager)
     {
     	long[] tensorShape = tensor.dimensionsAsLongArray();
-	 	NDArray ndarray = manager.create(RaiArrayUtils.byteArray(tensor), new Shape(tensorShape));
-		
-		return ndarray;
+    	Cursor<ByteType> tensorCursor;
+		if (tensor instanceof IntervalView)
+			tensorCursor = ((IntervalView<ByteType>) tensor).cursor();
+		else if (tensor instanceof Img)
+			tensorCursor = ((Img<ByteType>) tensor).cursor();
+		else
+			throw new IllegalArgumentException("The data of the " + Tensor.class + " has "
+					+ "to be an instance of " + Img.class + " or " + IntervalView.class);
+		long flatSize = 1;
+		for (long dd : tensor.dimensionsAsLongArray()) { flatSize *= dd;}
+		byte[] flatArr = new byte[(int) flatSize];
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	byte val = tensorCursor.get().getByte();
+        	flatArr[flatPos] = val;
+		}
+	 	NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
+	 	return ndarray;
 	}
 
     /**
@@ -100,10 +116,28 @@ public class NDarrayBuilder {
      *        {@link NDManager} needed to create NDArrays
      * @return The NDArray built from the tensor of type {@link DataType#INT}.
      */
-    private static <T extends Type<T>> NDArray buildFromTensorInt(RandomAccessibleInterval<IntType> tensor, NDManager manager)
+    private static NDArray buildFromTensorInt(RandomAccessibleInterval<IntType> tensor, NDManager manager)
     {
     	long[] tensorShape = tensor.dimensionsAsLongArray();
-	 	NDArray ndarray = manager.create(RaiArrayUtils.intArray(tensor), new Shape(tensorShape));
+    	Cursor<IntType> tensorCursor;
+		if (tensor instanceof IntervalView)
+			tensorCursor = ((IntervalView<IntType>) tensor).cursor();
+		else if (tensor instanceof Img)
+			tensorCursor = ((Img<IntType>) tensor).cursor();
+		else
+			throw new IllegalArgumentException("The data of the " + Tensor.class + " has "
+					+ "to be an instance of " + Img.class + " or " + IntervalView.class);
+		long flatSize = 1;
+		for (long dd : tensor.dimensionsAsLongArray()) { flatSize *= dd;}
+		int[] flatArr = new int[(int) flatSize];
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	int val = tensorCursor.get().getInteger();
+        	flatArr[flatPos] = val;
+		}
+	 	NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
 	 	return ndarray;
     }
 
@@ -116,7 +150,7 @@ public class NDarrayBuilder {
      *        {@link NDManager} needed to create NDArrays
      * @return The NDArray built from the tensor of type {@link DataType#FLOAT}.
      */
-    private static <T extends Type<T>> NDArray buildFromTensorFloat(RandomAccessibleInterval<FloatType> tensor, NDManager manager)
+    private static NDArray buildFromTensorFloat(RandomAccessibleInterval<FloatType> tensor, NDManager manager)
     {
     	long[] tensorShape = tensor.dimensionsAsLongArray();
     	Cursor<FloatType> tensorCursor;
@@ -139,11 +173,6 @@ public class NDarrayBuilder {
 		}
 	 	NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
 	 	return ndarray;
-    	/*
-    	long[] tensorShape = tensor.dimensionsAsLongArray();
-	 	NDArray ndarray = manager.create(RaiArrayUtils.floatArray(tensor), new Shape(tensorShape));
-	 	return ndarray;
-	 	*/
     }
 
     /**
@@ -155,10 +184,28 @@ public class NDarrayBuilder {
      *        {@link NDManager} needed to create NDArrays
      * @return The NDArray built from the tensor of type {@link DataType#DOUBLE}.
      */
-    private static <T extends Type<T>> NDArray buildFromTensorDouble(RandomAccessibleInterval<DoubleType> tensor, NDManager manager)
+    private static NDArray buildFromTensorDouble(RandomAccessibleInterval<DoubleType> tensor, NDManager manager)
     {
     	long[] tensorShape = tensor.dimensionsAsLongArray();
-	 	NDArray ndarray = manager.create(RaiArrayUtils.doubleArray(tensor), new Shape(tensorShape));
+    	Cursor<DoubleType> tensorCursor;
+		if (tensor instanceof IntervalView)
+			tensorCursor = ((IntervalView<DoubleType>) tensor).cursor();
+		else if (tensor instanceof Img)
+			tensorCursor = ((Img<DoubleType>) tensor).cursor();
+		else
+			throw new IllegalArgumentException("The data of the " + Tensor.class + " has "
+					+ "to be an instance of " + Img.class + " or " + IntervalView.class);
+		long flatSize = 1;
+		for (long dd : tensor.dimensionsAsLongArray()) { flatSize *= dd;}
+		double[] flatArr = new double[(int) flatSize];
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	double val = tensorCursor.get().getRealDouble();
+        	flatArr[flatPos] = val;
+		}
+	 	NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
 	 	return ndarray;
     }
 }
