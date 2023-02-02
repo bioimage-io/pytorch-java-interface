@@ -7,12 +7,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bioimageanalysis.icy.deeplearning.engine.DeepLearningEngineInterface;
 import org.bioimageanalysis.icy.deeplearning.exceptions.LoadModelException;
 import org.bioimageanalysis.icy.deeplearning.exceptions.RunModelException;
 import org.bioimageanalysis.icy.deeplearning.pytorch.tensor.ImgLib2Builder;
 import org.bioimageanalysis.icy.deeplearning.pytorch.tensor.NDarrayBuilder;
 import org.bioimageanalysis.icy.deeplearning.tensor.Tensor;
-import org.bioimageanalysis.icy.deeplearning.utils.DeepLearningInterface;
 
 import ai.djl.MalformedModelException;
 import ai.djl.engine.EngineException;
@@ -36,7 +36,7 @@ import ai.djl.translate.TranslateException;
  * @see TensorBuilder TensorBuilder: Create tensors from images and sequences.
  * @author Carlos Garcia Lopez de Haro 
  */
-public class PytorchInterface implements DeepLearningInterface
+public class PytorchInterface implements DeepLearningEngineInterface
 {
 	private ZooModel<NDList, NDList> model;
     
