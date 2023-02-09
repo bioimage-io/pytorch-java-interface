@@ -117,16 +117,18 @@
 	</ciManagement>
 
 	<properties>
-		<dl-modelrunner.version>0.1.0</dl-modelrunner.version>
-		<djl-api.version>0.19.0</djl-api.version>
-		<pytorch-engine.version>0.19.0</pytorch-engine.version>
-		<pytorch-jni.version>1.12.1-0.19.0</pytorch-jni.version>
 		<package-name>io.bioimage.modelrunner.pytorch</package-name>
+
 		<license.licenseName>bsd_3</license.licenseName>
 		<license.copyrightOwners>Institut Pasteur and BioImage.IO developers.</license.copyrightOwners>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
+
+		<djl-api.version>0.19.0</djl-api.version>
+		<dl-modelrunner.version>0.1.0</dl-modelrunner.version>
+		<pytorch-engine.version>0.19.0</pytorch-engine.version>
+		<pytorch-jni.version>1.12.1-0.19.0</pytorch-jni.version>
 	</properties>
 
 	<repositories>
