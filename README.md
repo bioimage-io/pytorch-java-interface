@@ -1,15 +1,17 @@
-# pytorch-java-interface
+[![Build Status](https://github.com/bioimage-io/pytorch-java-interface/actions/workflows/build.yml/badge.svg)](https://github.com/bioimage-io/pytorch-java-interface/actions/workflows/build.yml)
 
-JAR file at: https://icy-nexus.pasteur.fr/repository/Icy/org/bioimageanalysis/icy/pytorch-interface/0.0.1/pytorch-interface-0.0.1.jar
+# dl-modelrunner-java: pytorch
+
+JAR file at: https://maven.scijava.org/service/local/artifact/maven/redirect?r=releases&g=io.bioimage&a=dl-modelrunner-pytorch&v=0.1.0&e=jar
 
 
 To use with maven:
 
 ```
 <dependency>
-  <groupId>org.bioimageanalysis.icy</groupId>
-  <artifactId>pytorch-interface</artifactId>
-  <version>0.0.1</version>
+  <groupId>io.bioimage</groupId>
+  <artifactId>dl-modelrunner-pytorch</artifactId>
+  <version>0.1.0</version>
 </dependency>
 ```
 
@@ -17,7 +19,7 @@ and add to </repositories> the following:
 
 ```
 <repository>
-  <id>icy</id>
-  <url>https://icy-nexus.pasteur.fr/repository/Icy/</url>
+  <id>scijava.public</id>
+  <url>https://maven.scijava.org/content/groups/public</url>
 </repository>
 ```
