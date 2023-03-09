@@ -63,7 +63,21 @@ import ai.djl.translate.TranslateException;
 /**
  * This class implements an interface that allows the main plugin to interact in
  * an agnostic way with the Deep Learning model and tensors to make inference.
- * This implementation add the Pytorch support to the main program.
+ * This implementation adds Pytorch support to the main program.
+ * 
+ * Class to that communicates with the dl-model runner, 
+ * @see <a href="https://github.com/bioimage-io/model-runner-java">dlmodelrunner</a>
+ * to execute Pytorch models.
+ * This class implements the interface {@link DeepLearningEngineInterface} to get the 
+ * agnostic {@link io.bioimage.modelrunner.tensor.Tensor}, convert them into 
+ * {@link ai.djl.ndarray.NDArray}, execute a Pytorch Deep Learning model on them and
+ * convert the results back to {@link io.bioimage.modelrunner.tensor.Tensor} to send them 
+ * to the main program in an agnostic manner.
+ * 
+ * {@link ImgLib2Builder}. Creates ImgLib2 images for the backend
+ *  of {@link io.bioimage.modelrunner.tensor.Tensor} from {@link ai.djl.ndarray.NDArray}
+ * {@link NDArrayBuilder}. Converts {@link io.bioimage.modelrunner.tensor.Tensor} into {@link ai.djl.ndarray.NDArray}
+ *  
  * 
  * @see ImgLib2Builder tensors from images and sequences.
  * @author Carlos Garcia Lopez de Haro
@@ -74,6 +88,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 
 	public PytorchInterface() {}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void run(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors)
 		throws RunModelException
@@ -100,6 +117,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void loadModel(String modelFolder, String modelSource)
 		throws LoadModelException
@@ -128,6 +148,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void closeModel() {
 		if (model != null) model.close();
@@ -215,6 +238,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void finalize() {
 		System.out.println("Collected Garbage");
