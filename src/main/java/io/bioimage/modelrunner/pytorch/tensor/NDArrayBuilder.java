@@ -58,7 +58,7 @@ import ai.djl.ndarray.types.Shape;
  * 
  * @author Carlos Garcia Lopez de Haro
  */
-public class NDarrayBuilder {
+public class NDArrayBuilder {
 
 	/**
 	 * Creates a {@link NDArray} from a given {@link Tensor}. The {@link Tensor}

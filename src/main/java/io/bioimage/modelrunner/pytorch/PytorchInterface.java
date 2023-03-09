@@ -38,7 +38,7 @@ import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
 import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
-import io.bioimage.modelrunner.pytorch.tensor.NDarrayBuilder;
+import io.bioimage.modelrunner.pytorch.tensor.NDArrayBuilder;
 import io.bioimage.modelrunner.tensor.Tensor;
 
 import java.io.File;
@@ -113,7 +113,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			List<String> inputListNames = new ArrayList<String>();
 			for (Tensor<?> tt : inputTensors) {
 				inputListNames.add(tt.getName());
-				inputList.add(NDarrayBuilder.build(tt, manager));
+				inputList.add(NDArrayBuilder.build(tt, manager));
 			}
 			// Run model
 			Predictor<NDList, NDList> predictor = model.newPredictor();
