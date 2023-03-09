@@ -35,19 +35,20 @@
 package io.bioimage.modelrunner.pytorch.tensor;
 
 /**
- * Class that manages the shape of nd4j arrays
+ * Class that provides methods to manage the shape of DJL NDArrays
  * 
  * @author Carlos Garcia Lopez de Haro
  */
 public class ImgLib2ShapeUtils {
 
 	/**
-	 * Creates a tensor shape from an int array
+	 * Converts an int array into a long array
 	 * 
-	 * @param shapeArr int array with the size of each dimension
-	 * @return Shape with the image dimensions in the desired order.
+	 * @param shapeArr 
+	 * 	int array 
+	 * @return long array copied from the int array
 	 */
-	public static long[] fromArray(int[] shapeArr) {
+	public static long[] intArrayToLongArray(int[] shapeArr) {
 		long[] dimensionSizes = new long[shapeArr.length];
 		for (int i = 0; i < dimensionSizes.length; i++) {
 			dimensionSizes[i] = (long) shapeArr[i];

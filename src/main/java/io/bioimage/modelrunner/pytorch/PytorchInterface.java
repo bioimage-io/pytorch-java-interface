@@ -84,12 +84,23 @@ import ai.djl.translate.TranslateException;
  */
 public class PytorchInterface implements DeepLearningEngineInterface {
 
+	/**
+	 * The Pytorch model loaded with the DJL API
+	 */
 	private ZooModel<NDList, NDList> model;
 
+	/**
+	 * Constructor for the interface. It is going to be called from the 
+	 * dlmodel-runner
+	 */
 	public PytorchInterface() {}
 
 	/**
 	 * {@inheritDoc}
+	 * 
+	 * Run a Pytorch model on the data provided by the {@link Tensor} input list
+	 * and modifies the output list with the results obtained
+	 * 
 	 */
 	@Override
 	public void run(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors)
@@ -119,6 +130,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 
 	/**
 	 * {@inheritDoc}
+	 * 
+     * Load a Pytorch model. 
 	 */
 	@Override
 	public void loadModel(String modelFolder, String modelSource)
@@ -150,6 +163,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 
 	/**
 	 * {@inheritDoc}
+	 * 
+	 * Closes the Pytorch model and sets it to null once the model is not needed anymore.
+	 * 
 	 */
 	@Override
 	public void closeModel() {
@@ -179,7 +195,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	}
 
 	/**
-	 * Print the correct message depending on the exception produced when trying
+	 * Print the correct message depending on the exception that happened trying
 	 * to load the model
 	 * 
 	 * @param e the exception that occurred
