@@ -44,6 +44,7 @@ import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 
@@ -76,6 +77,7 @@ public class ImgLib2Builder {
 		// Create an ImgLib2 Img of the same type as the NDArray
 		switch (tensor.getDataType()) {
 			case UINT8:
+				return (Img<T>) buildFromTensorUByte(tensor);
 			case INT8:
 				return (Img<T>) buildFromTensorByte(tensor);
 			case INT32:
@@ -92,6 +94,34 @@ public class ImgLib2Builder {
 
 	/**
 	 * Builds a {@link Img} from a unsigned byte-typed {@link NDArray}.
+	 * 
+	 * @param tensor 
+	 * 	The {@link NDArray} data is read from.
+	 * @return The {@link Img} built from the tensor of type {@link UnsignedByteType}.
+	 */
+	private static Img<UnsignedByteType> buildFromTensorUByte(NDArray tensor) {
+		long[] tensorShape = tensor.getShape().getShape();
+		final ImgFactory<UnsignedByteType> factory = new CellImgFactory<>(new UnsignedByteType(),
+			5);
+		final Img<UnsignedByteType> outputImg = factory.create(tensorShape);
+		Cursor<UnsignedByteType> tensorCursor = outputImg.cursor();
+		byte[] flatArr = tensor.toByteArray();
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
+				tensorShape);
+			byte val = flatArr[flatPos];
+			if (val < 0)
+				tensorCursor.get().set(256 + val);
+			else
+				tensorCursor.get().set(val);
+		}
+		return outputImg;
+	}
+
+	/**
+	 * Builds a {@link Img} from a signed byte-typed {@link NDArray}.
 	 * 
 	 * @param tensor 
 	 * 	The {@link NDArray} data is read from.
