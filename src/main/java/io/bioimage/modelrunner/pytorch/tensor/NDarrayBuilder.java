@@ -52,15 +52,23 @@ import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
 import ai.djl.ndarray.types.Shape;
 
+/**
+ * A Pytorch {@link NDArray} builder for {@link Img} and
+ * {@link io.bioimage.modelrunner.tensor.Tensor} objects.
+ * 
+ * @author Carlos Garcia Lopez de Haro
+ */
 public class NDarrayBuilder {
 
 	/**
-	 * Creates a {@link NDArray} from a given {@link Tensor} and an array with its
-	 * dimensions order.
+	 * Creates a {@link NDArray} from a given {@link Tensor}. The {@link Tensor}
+	 * contains the data and info(dimensions, dataype) necessary to build a {@link NDArray}
 	 * 
-	 * @param tensor The tensor data is read from.
-	 * @param manager {@link NDManager} needed to create NDArrays
-	 * @return The NDArray built from the tensor.
+	 * @param tensor 
+	 * 	The {@link Tensor} that will be copied into a {@link NDArray}
+	 * @param manager
+	 *  {@link NDManager} needed to create NDArrays
+	 * @return The {@link NDArray} built from the {@link Tensor}.
 	 * @throws IllegalArgumentException If the tensor type is not supported.
 	 */
 	public static NDArray build(Tensor tensor, NDManager manager)
@@ -86,13 +94,16 @@ public class NDarrayBuilder {
 	}
 
 	/**
-	 * Creates a {@link NDArray} from a given {@link RandomAccessibleInterval} and
-	 * an array with its dimensions order.
+	 * Creates a {@link NDArray} from a given {@link RandomAccessibleInterval}.
 	 * 
-	 * @param tensor The INDArray containing the wanted data.
-	 * @param manager {@link NDManager} needed to create NDArrays
-	 * @return The NDArray built from the tensor.
-	 * @throws IllegalArgumentException If the tensor type is not supported.
+	 * @param <T>
+	 * 	possible ImgLib2 datatypes of the {@link RandomAccessibleInterval}
+	 * @param tensor
+	 * 	the {@link RandomAccessibleInterval} that will be copied into an {@link NDArray}
+	 * @param manager
+	 *  {@link NDManager} needed to create NDArrays
+	 * @return The {@link NDArray} built from the {@link RandomAccessibleInterval}.
+	 * @throws IllegalArgumentException if the {@link RandomAccessibleInterval} is not supported
 	 */
 	public static <T extends Type<T>> NDArray build(
 		RandomAccessibleInterval<T> tensor, NDManager manager)
@@ -124,9 +135,11 @@ public class NDarrayBuilder {
 	 * Builds a {@link NDArray} from a unsigned byte-typed
 	 * {@link RandomAccessibleInterval}.
 	 * 
-	 * @param tensor The tensor data is read from.
-	 * @param manager {@link NDManager} needed to create NDArrays
-	 * @return The NDArray built from the tensor of type {@link ByteType}.
+	 * @param tensor 
+	 * 	the {@link RandomAccessibleInterval} that will be copied into an {@link NDArray}
+	 * @param manager 
+	 * 	{@link NDManager} needed to create a {@link NDArray}
+	 * @return The {@link NDArray} built from the tensor of type {@link ByteType}.
 	 */
 	private static NDArray buildFromTensorByte(
 		RandomAccessibleInterval<ByteType> tensor, NDManager manager)
@@ -161,9 +174,11 @@ public class NDarrayBuilder {
 	 * Builds a {@link NDArray} from a unsigned integer-typed
 	 * {@link RandomAccessibleInterval}.
 	 * 
-	 * @param tensor The tensor data is read from.
-	 * @param manager {@link NDManager} needed to create NDArrays
-	 * @return The NDArray built from the tensor of type {@link IntType}.
+	 * @param tensor 
+	 * 	the {@link RandomAccessibleInterval} that will be copied into an {@link NDArray}
+	 * @param manager 
+	 * 	{@link NDManager} needed to create a {@link NDArray}
+	 * @return The {@link NDArray} built from the tensor of type {@link IntType}.
 	 */
 	private static NDArray buildFromTensorInt(
 		RandomAccessibleInterval<IntType> tensor, NDManager manager)
@@ -198,9 +213,11 @@ public class NDarrayBuilder {
 	 * Builds a {@link NDArray} from a unsigned float-typed
 	 * {@link RandomAccessibleInterval}.
 	 * 
-	 * @param tensor The tensor data is read from.
-	 * @param manager {@link NDManager} needed to create NDArrays
-	 * @return The NDArray built from the tensor of type {@link FloatType}.
+	 * @param tensor 
+	 * 	the {@link RandomAccessibleInterval} that will be copied into an {@link NDArray}
+	 * @param manager 
+	 * 	{@link NDManager} needed to create a {@link NDArray}
+	 * @return The {@link NDArray} built from the tensor of type {@link FloatType}.
 	 */
 	private static NDArray buildFromTensorFloat(
 		RandomAccessibleInterval<FloatType> tensor, NDManager manager)
@@ -235,9 +252,11 @@ public class NDarrayBuilder {
 	 * Builds a {@link NDArray} from a unsigned double-typed
 	 * {@link RandomAccessibleInterval}.
 	 * 
-	 * @param tensor The tensor data is read from.
-	 * @param manager {@link NDManager} needed to create NDArrays
-	 * @return The NDArray built from the tensor of type {@link DoubleType}.
+	 * @param tensor 
+	 * 	the {@link RandomAccessibleInterval} that will be copied into an {@link NDArray}
+	 * @param manager 
+	 * 	{@link NDManager} needed to create a {@link NDArray}
+	 * @return The {@link NDArray} built from the tensor of type {@link DoubleType}.
 	 */
 	private static NDArray buildFromTensorDouble(
 		RandomAccessibleInterval<DoubleType> tensor, NDManager manager)
