@@ -120,7 +120,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			NDList outputNDArrays = predictor.predict(inputList);
 			// Fill the agnostic output tensors list with data from the inference
 			// result
-			outputTensors = fillOutputTensors(outputNDArrays, outputTensors);
+			fillOutputTensors(outputNDArrays, outputTensors);
 		}
 		catch (TranslateException e) {
 			e.printStackTrace();
@@ -179,11 +179,10 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 * 
 	 * @param outputNDArrays an NDList containing NDArrays (tensors)
 	 * @param outputTensors the names given to the tensors by the model
-	 * @return a list with Deep Learning framework agnostic tensors
 	 * @throws RunModelException If the number of tensors expected is not the same
 	 *           as the number of Tensors outputed by the model
 	 */
-	public static List<Tensor<?>> fillOutputTensors(NDList outputNDArrays,
+	public static void fillOutputTensors(NDList outputNDArrays,
 		List<Tensor<?>> outputTensors) throws RunModelException
 	{
 		if (outputNDArrays.size() != outputTensors.size())
@@ -191,7 +190,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		for (int i = 0; i < outputNDArrays.size(); i++) {
 			outputTensors.get(i).setData(ImgLib2Builder.build(outputNDArrays.get(i)));
 		}
-		return outputTensors;
 	}
 
 	/**
