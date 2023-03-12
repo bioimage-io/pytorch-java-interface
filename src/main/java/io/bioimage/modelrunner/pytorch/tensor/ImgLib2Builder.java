@@ -39,8 +39,7 @@ import io.bioimage.modelrunner.utils.IndexingUtils;
 
 import net.imglib2.Cursor;
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.img.cell.CellImgFactory;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
@@ -101,8 +100,7 @@ public class ImgLib2Builder {
 	 */
 	private static Img<UnsignedByteType> buildFromTensorUByte(NDArray tensor) {
 		long[] tensorShape = tensor.getShape().getShape();
-		final ImgFactory<UnsignedByteType> factory = new CellImgFactory<>(new UnsignedByteType(),
-			5);
+		final ArrayImgFactory<UnsignedByteType> factory = new ArrayImgFactory<>(new UnsignedByteType());
 		final Img<UnsignedByteType> outputImg = factory.create(tensorShape);
 		Cursor<UnsignedByteType> tensorCursor = outputImg.cursor();
 		byte[] flatArr = tensor.toByteArray();
@@ -129,8 +127,7 @@ public class ImgLib2Builder {
 	 */
 	private static Img<ByteType> buildFromTensorByte(NDArray tensor) {
 		long[] tensorShape = tensor.getShape().getShape();
-		final ImgFactory<ByteType> factory = new CellImgFactory<>(new ByteType(),
-			5);
+		final ArrayImgFactory<ByteType> factory = new ArrayImgFactory<>(new ByteType());
 		final Img<ByteType> outputImg = factory.create(tensorShape);
 		Cursor<ByteType> tensorCursor = outputImg.cursor();
 		byte[] flatArr = tensor.toByteArray();
@@ -154,7 +151,7 @@ public class ImgLib2Builder {
 	 */
 	private static Img<IntType> buildFromTensorInt(NDArray tensor) {
 		long[] tensorShape = tensor.getShape().getShape();
-		final ImgFactory<IntType> factory = new CellImgFactory<>(new IntType(), 5);
+		final ArrayImgFactory<IntType> factory = new ArrayImgFactory<>(new IntType());
 		final Img<IntType> outputImg = factory.create(tensorShape);
 		Cursor<IntType> tensorCursor = outputImg.cursor();
 		int[] flatArr = tensor.toIntArray();
@@ -178,8 +175,7 @@ public class ImgLib2Builder {
 	 */
 	private static Img<FloatType> buildFromTensorFloat(NDArray tensor) {
 		long[] tensorShape = tensor.getShape().getShape();
-		final ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType(),
-			5);
+		final ArrayImgFactory<FloatType> factory = new ArrayImgFactory<>(new FloatType());
 		final Img<FloatType> outputImg = factory.create(tensorShape);
 		Cursor<FloatType> tensorCursor = outputImg.cursor();
 		float[] flatArr = tensor.toFloatArray();
@@ -203,8 +199,7 @@ public class ImgLib2Builder {
 	 */
 	private static Img<DoubleType> buildFromTensorDouble(NDArray tensor) {
 		long[] tensorShape = tensor.getShape().getShape();
-		final ImgFactory<DoubleType> factory = new CellImgFactory<>(
-			new DoubleType(), 5);
+		final ArrayImgFactory<DoubleType> factory = new ArrayImgFactory<>(new DoubleType());
 		final Img<DoubleType> outputImg = factory.create(tensorShape);
 		Cursor<DoubleType> tensorCursor = outputImg.cursor();
 		double[] flatArr = tensor.toDoubleArray();
