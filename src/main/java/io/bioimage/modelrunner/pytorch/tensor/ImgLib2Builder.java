@@ -34,7 +34,6 @@
 
 package io.bioimage.modelrunner.pytorch.tensor;
 
-import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.utils.IndexingUtils;
 
 import net.imglib2.Cursor;
@@ -48,7 +47,6 @@ import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 
 import ai.djl.ndarray.NDArray;
-import ai.djl.ndarray.types.DataType;
 
 /**
 * A {@link Img} builder for Pytorch {@link ai.djl.ndarray.NDArray} objects.
