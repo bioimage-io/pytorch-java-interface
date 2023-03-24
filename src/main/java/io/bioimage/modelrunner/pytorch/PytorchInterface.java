@@ -251,12 +251,4 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			System.out.println("An error occurred accessing the model file.");
 		}
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void finalize() {
-		System.out.println("Collected Garbage");
-	}
 }
