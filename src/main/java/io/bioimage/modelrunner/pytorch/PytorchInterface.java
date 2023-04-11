@@ -70,7 +70,6 @@ import ai.djl.translate.TranslateException;
  * {@link NDArrayBuilder}. Converts {@link io.bioimage.modelrunner.tensor.Tensor} into {@link ai.djl.ndarray.NDArray}
  *  
  * 
- * @see ImgLib2Builder tensors from images and sequences.
  * @author Carlos Garcia Lopez de Haro
  */
 public class PytorchInterface implements DeepLearningEngineInterface {
