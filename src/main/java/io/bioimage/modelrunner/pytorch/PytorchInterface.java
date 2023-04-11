@@ -159,7 +159,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 */
 	@Override
 	public void closeModel() {
-		if (model != null) model.close();
+		if (model != null) 
+			model.close();
 		model = null;
 	}
 
