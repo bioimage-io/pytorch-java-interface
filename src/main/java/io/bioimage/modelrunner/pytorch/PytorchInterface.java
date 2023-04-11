@@ -23,7 +23,6 @@
  * under the License.
  * #L%
  */
-
 package io.bioimage.modelrunner.pytorch;
 
 import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
