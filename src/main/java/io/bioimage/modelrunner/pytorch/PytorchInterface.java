@@ -166,10 +166,13 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 
 	/**
 	 * Create the list a list of output tensors agnostic to the Deep Learning
-	 * engine that can be readable by Deep Icy
+	 * engine that can be readable by the model-runner
 	 * 
-	 * @param outputNDArrays an NDList containing NDArrays (tensors)
-	 * @param outputTensors the names given to the tensors by the model
+	 * @param outputNDArrays 
+	 * 	an NDList containing NDArrays (tensors)
+	 * @param outputTensors 
+	 * 	the list of output tensors where the output data is going to be written to send back
+	 * 	to the model runner
 	 * @throws RunModelException If the number of tensors expected is not the same
 	 *           as the number of Tensors outputed by the model
 	 */
