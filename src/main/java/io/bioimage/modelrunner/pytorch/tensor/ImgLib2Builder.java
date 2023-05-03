@@ -133,7 +133,7 @@ public class ImgLib2Builder {
 	}
 
 	/**
-	 * Builds a {@link Img} from a unsigned integer-typed {@link NDArray}.
+	 * Builds a {@link Img} from a signed integer-typed {@link NDArray}.
 	 * 
 	 * @param tensor 
 	 * 	The {@link NDArray} data is read from.
@@ -157,7 +157,7 @@ public class ImgLib2Builder {
 	}
 
 	/**
-	 * Builds a {@link Img} from a unsigned float-typed {@link NDArray}.
+	 * Builds a {@link Img} from a signed float-typed {@link NDArray}.
 	 * 
 	 * @param tensor 
 	 * 	The {@link NDArray} data is read from.
@@ -181,7 +181,7 @@ public class ImgLib2Builder {
 	}
 
 	/**
-	 * Builds a {@link Img} from a unsigned double-typed {@link NDArray}.
+	 * Builds a {@link Img} from a signed double-typed {@link NDArray}.
 	 * 
 	 * @param tensor 
 	 * 	The {@link NDArray} data is read from.
