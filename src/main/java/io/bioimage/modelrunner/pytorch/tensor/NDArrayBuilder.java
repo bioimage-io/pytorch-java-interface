@@ -124,7 +124,7 @@ public class NDArrayBuilder {
 	}
 
 	/**
-	 * Builds a {@link NDArray} from a unsigned byte-typed
+	 * Builds a {@link NDArray} from a signed byte-typed
 	 * {@link RandomAccessibleInterval}.
 	 * 
 	 * @param tensor 
@@ -163,7 +163,7 @@ public class NDArrayBuilder {
 	}
 
 	/**
-	 * Builds a {@link NDArray} from a unsigned integer-typed
+	 * Builds a {@link NDArray} from a signed integer-typed
 	 * {@link RandomAccessibleInterval}.
 	 * 
 	 * @param tensor 
@@ -202,7 +202,7 @@ public class NDArrayBuilder {
 	}
 
 	/**
-	 * Builds a {@link NDArray} from a unsigned float-typed
+	 * Builds a {@link NDArray} from a signed float-typed
 	 * {@link RandomAccessibleInterval}.
 	 * 
 	 * @param tensor 
@@ -241,7 +241,7 @@ public class NDArrayBuilder {
 	}
 
 	/**
-	 * Builds a {@link NDArray} from a unsigned double-typed
+	 * Builds a {@link NDArray} from a signed double-typed
 	 * {@link RandomAccessibleInterval}.
 	 * 
 	 * @param tensor 
