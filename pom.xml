@@ -125,10 +125,10 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
-		<djl-api.version>0.19.0</djl-api.version>
-		<dl-modelrunner.version>0.1.0</dl-modelrunner.version>
-		<pytorch-engine.version>0.19.0</pytorch-engine.version>
-		<pytorch-jni.version>1.12.1-0.19.0</pytorch-jni.version>
+		<djl-api.version>0.22.1</djl-api.version>
+		<dl-modelrunner.version>0.2.1-SNAPSHOT</dl-modelrunner.version>
+		<pytorch-engine.version>0.22.1</pytorch-engine.version>
+		<pytorch-jni.version>2.0.0-0.22.1</pytorch-jni.version>
 	</properties>
 
 	<repositories>
