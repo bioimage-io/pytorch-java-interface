@@ -128,12 +128,12 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			// Find the URL that corresponds to the file
 			URL url = new File(modelFolder).toURI().toURL();
 			// Define the location and type of the model
-			Criteria<NDList, NDList> criteria = Criteria.builder().setTypes(
-				NDList.class, NDList.class).optModelUrls(url.toString()) // search
-																																	// models in
-																																	// specified
-																																	// path
-				.optModelName(modelName).optProgress(new ProgressBar()).build();
+			Criteria<NDList, NDList> criteria = Criteria.builder()
+					.setTypes(NDList.class, NDList.class)
+					.optModelUrls(url.toString())
+					.optModelName(modelName)
+					.optProgress(new ProgressBar())
+					.build();
 			criteria.getTranslatorFactory();
 			// Load the model using the criteria defined previously
 			this.model = ModelZoo.loadModel(criteria);
