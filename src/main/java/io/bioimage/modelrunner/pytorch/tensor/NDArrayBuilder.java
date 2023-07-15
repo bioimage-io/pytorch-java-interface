@@ -27,7 +27,8 @@ import io.bioimage.modelrunner.utils.IndexingUtils;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
-import net.imglib2.type.Type;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.real.DoubleType;
@@ -58,21 +59,21 @@ public class NDArrayBuilder {
 	 * @return The {@link NDArray} built from the {@link Tensor}.
 	 * @throws IllegalArgumentException If the tensor type is not supported.
 	 */
-	public static NDArray build(Tensor tensor, NDManager manager)
+	public static < T extends RealType< T > & NativeType< T > > NDArray build(Tensor<T> tensor, NDManager manager)
 		throws IllegalArgumentException
 	{
 		// Create an Icy sequence of the same type of the tensor
 		if (Util.getTypeFromInterval(tensor.getData()) instanceof ByteType) {
-			return buildFromTensorByte(tensor.getData(), manager);
+			return buildFromTensorByte((RandomAccessibleInterval<ByteType>) tensor.getData(), manager);
 		}
 		else if (Util.getTypeFromInterval(tensor.getData()) instanceof IntType) {
-			return buildFromTensorInt(tensor.getData(), manager);
+			return buildFromTensorInt((RandomAccessibleInterval<IntType>) tensor.getData(), manager);
 		}
 		else if (Util.getTypeFromInterval(tensor.getData()) instanceof FloatType) {
-			return buildFromTensorFloat(tensor.getData(), manager);
+			return buildFromTensorFloat((RandomAccessibleInterval<FloatType>) tensor.getData(), manager);
 		}
 		else if (Util.getTypeFromInterval(tensor.getData()) instanceof DoubleType) {
-			return buildFromTensorDouble(tensor.getData(), manager);
+			return buildFromTensorDouble((RandomAccessibleInterval<DoubleType>) tensor.getData(), manager);
 		}
 		else {
 			throw new IllegalArgumentException("Unsupported tensor type: " + tensor
@@ -92,7 +93,7 @@ public class NDArrayBuilder {
 	 * @return The {@link NDArray} built from the {@link RandomAccessibleInterval}.
 	 * @throws IllegalArgumentException if the {@link RandomAccessibleInterval} is not supported
 	 */
-	public static <T extends Type<T>> NDArray build(
+	public static < T extends RealType< T > & NativeType< T > > NDArray build(
 		RandomAccessibleInterval<T> tensor, NDManager manager)
 		throws IllegalArgumentException
 	{

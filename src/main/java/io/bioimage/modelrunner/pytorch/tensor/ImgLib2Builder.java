@@ -26,7 +26,8 @@ import io.bioimage.modelrunner.utils.IndexingUtils;
 import net.imglib2.Cursor;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.type.Type;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -55,7 +56,7 @@ public class ImgLib2Builder {
 	 * @throws IllegalArgumentException if the dataype of the {@link ai.djl.ndarray.NDArray} 
 	 * is not supported
 	 */
-	public static <T extends Type<T>> Img<T> build(NDArray tensor)
+	public static < T extends RealType< T > & NativeType< T > > Img<T> build(NDArray tensor)
 		throws IllegalArgumentException
 	{
 		// Create an ImgLib2 Img of the same type as the NDArray
