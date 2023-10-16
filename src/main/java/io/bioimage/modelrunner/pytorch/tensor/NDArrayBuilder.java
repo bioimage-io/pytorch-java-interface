@@ -26,6 +26,7 @@ import io.bioimage.modelrunner.utils.IndexingUtils;
 
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.blocks.PrimitiveBlocks;
 import net.imglib2.img.Img;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.ByteType;
@@ -131,28 +132,16 @@ public class NDArrayBuilder {
 	private static NDArray buildFromTensorByte(
 		RandomAccessibleInterval<ByteType> tensor, NDManager manager)
 	{
+		tensor = Utils.transpose(tensor);
+		PrimitiveBlocks< ByteType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
-		Cursor<ByteType> tensorCursor;
-		if (tensor instanceof IntervalView) tensorCursor =
-			((IntervalView<ByteType>) tensor).cursor();
-		else if (tensor instanceof Img) tensorCursor = ((Img<ByteType>) tensor)
-			.cursor();
-		else throw new IllegalArgumentException("The data of the " + Tensor.class +
-			" has " + "to be an instance of " + Img.class + " or " +
-			IntervalView.class);
-		long flatSize = 1;
-		for (long dd : tensor.dimensionsAsLongArray()) {
-			flatSize *= dd;
-		}
-		byte[] flatArr = new byte[(int) flatSize];
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			byte val = tensorCursor.get().getByte();
-			flatArr[flatPos] = val;
-		}
+		int size = 1;
+		for (long ll : tensorShape) size *= ll;
+		final float[] flatArr = new float[size];
+		int[] sArr = new int[tensorShape.length];
+		for (int i = 0; i < sArr.length; i ++)
+			sArr[i] = (int) tensorShape[i];
+		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
 		return ndarray;
 	}
