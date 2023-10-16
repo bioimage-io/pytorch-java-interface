@@ -21,12 +21,9 @@
 
 package io.bioimage.modelrunner.pytorch.tensor;
 
-import io.bioimage.modelrunner.utils.IndexingUtils;
 
-import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.transform.integer.MixedTransform;
 import net.imglib2.type.Type;
@@ -37,12 +34,11 @@ import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.MixedTransformView;
-import net.imglib2.view.ViewTransforms;
 import net.imglib2.view.Views;
 import ai.djl.ndarray.NDArray;
 
 /**
-* A {@link Img} builder for Pytorch {@link ai.djl.ndarray.NDArray} objects.
+* A {@link RandomAccessibleInterval} builder for Pytorch {@link ai.djl.ndarray.NDArray} objects.
 * Build ImgLib2 objects (backend of {@link io.bioimage.modelrunner.tensor.Tensor})
 * from Pytorch {@link ai.djl.ndarray.NDArray}
 * 
@@ -61,21 +57,21 @@ public class ImgLib2Builder {
 	 * @throws IllegalArgumentException if the dataype of the {@link ai.djl.ndarray.NDArray} 
 	 * is not supported
 	 */
-	public static <T extends Type<T>> Img<T> build(NDArray tensor)
+	public static <T extends Type<T>> RandomAccessibleInterval<T> build(NDArray tensor)
 		throws IllegalArgumentException
 	{
 		// Create an ImgLib2 Img of the same type as the NDArray
 		switch (tensor.getDataType()) {
 			case UINT8:
-				return (Img<T>) buildFromTensorUByte(tensor);
+				return (RandomAccessibleInterval<T>) buildFromTensorUByte(tensor);
 			case INT8:
-				return (Img<T>) buildFromTensorByte(tensor);
+				return (RandomAccessibleInterval<T>) buildFromTensorByte(tensor);
 			case INT32:
-				return (Img<T>) buildFromTensorInt(tensor);
+				return (RandomAccessibleInterval<T>) buildFromTensorInt(tensor);
 			case FLOAT32:
-				return (Img<T>) buildFromTensorFloat(tensor);
+				return (RandomAccessibleInterval<T>) buildFromTensorFloat(tensor);
 			case FLOAT64:
-				return (Img<T>) buildFromTensorDouble(tensor);
+				return (RandomAccessibleInterval<T>) buildFromTensorDouble(tensor);
 			default:
 				throw new IllegalArgumentException("Unsupported tensor type: " + tensor
 					.getDataType());
@@ -101,7 +97,8 @@ public class ImgLib2Builder {
 		t.setComponentMapping(transposeAxesOrderChange);
 		long[] minMax = new long[tensorShape.length];
 		for (int i = 0; i < tensorShape.length; i ++) minMax[i * 2 + 1] = tensorShape[i];
-		return Views.interval(new MixedTransformView<UnsignedByteType>( rai, t ), Intervals.createMinMax(tensorShape));
+		return Views.interval(new MixedTransformView<UnsignedByteType>( rai, t ), 
+				Intervals.createMinMax(tensorShape));
 	}
 
 	/**
@@ -111,92 +108,88 @@ public class ImgLib2Builder {
 	 * 	The {@link NDArray} data is read from.
 	 * @return The {@link Img} built from the tensor of type {@link ByteType}.
 	 */
-	private static Img<ByteType> buildFromTensorByte(NDArray tensor) {
-		long[] tensorShape = tensor.getShape().getShape();
-		final ArrayImgFactory<ByteType> factory = new ArrayImgFactory<>(new ByteType());
-		final Img<ByteType> outputImg = factory.create(tensorShape);
-		Cursor<ByteType> tensorCursor = outputImg.cursor();
+	private static RandomAccessibleInterval<ByteType> buildFromTensorByte(NDArray tensor) {
+		long[] arrayShape = tensor.getShape().getShape();
+		long[] tensorShape = new long[arrayShape.length];
+		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		byte[] flatArr = tensor.toByteArray();
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			byte val = flatArr[flatPos];
-			tensorCursor.get().set(val);
-		}
-		return outputImg;
+		RandomAccessibleInterval<ByteType> rai = ArrayImgs.bytes(flatArr, tensorShape);
+		MixedTransform t = new MixedTransform( tensorShape.length, tensorShape.length );
+		int[] transposeAxesOrderChange = new int[tensorShape.length];
+		for (int i = 0; i < tensorShape.length; i ++) transposeAxesOrderChange[i] = tensorShape.length - 1 - i;
+		t.setComponentMapping(transposeAxesOrderChange);
+		long[] minMax = new long[tensorShape.length];
+		for (int i = 0; i < tensorShape.length; i ++) minMax[i * 2 + 1] = tensorShape[i];
+		return Views.interval(new MixedTransformView<ByteType>( rai, t ), 
+				Intervals.createMinMax(tensorShape));
 	}
 
 	/**
-	 * Builds a {@link Img} from a signed integer-typed {@link NDArray}.
+	 * Builds a {@link RandomAccessibleInterval} from a signed integer-typed {@link NDArray}.
 	 * 
 	 * @param tensor 
 	 * 	The {@link NDArray} data is read from.
-	 * @return The {@link Img} built from the tensor of type {@link IntType}.
+	 * @return The {@link RandomAccessibleInterval} built from the tensor of type {@link IntType}.
 	 */
-	private static Img<IntType> buildFromTensorInt(NDArray tensor) {
-		long[] tensorShape = tensor.getShape().getShape();
-		final ArrayImgFactory<IntType> factory = new ArrayImgFactory<>(new IntType());
-		final Img<IntType> outputImg = factory.create(tensorShape);
-		Cursor<IntType> tensorCursor = outputImg.cursor();
+	private static RandomAccessibleInterval<IntType> buildFromTensorInt(NDArray tensor) {
+		long[] arrayShape = tensor.getShape().getShape();
+		long[] tensorShape = new long[arrayShape.length];
+		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		int[] flatArr = tensor.toIntArray();
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			int val = flatArr[flatPos];
-			tensorCursor.get().set(val);
-		}
-		return outputImg;
+		RandomAccessibleInterval<IntType> rai = ArrayImgs.ints(flatArr, tensorShape);
+		MixedTransform t = new MixedTransform( tensorShape.length, tensorShape.length );
+		int[] transposeAxesOrderChange = new int[tensorShape.length];
+		for (int i = 0; i < tensorShape.length; i ++) transposeAxesOrderChange[i] = tensorShape.length - 1 - i;
+		t.setComponentMapping(transposeAxesOrderChange);
+		long[] minMax = new long[tensorShape.length];
+		for (int i = 0; i < tensorShape.length; i ++) minMax[i * 2 + 1] = tensorShape[i];
+		return Views.interval(new MixedTransformView<IntType>( rai, t ), 
+				Intervals.createMinMax(tensorShape));
 	}
 
 	/**
-	 * Builds a {@link Img} from a signed float-typed {@link NDArray}.
+	 * Builds a {@link RandomAccessibleInterval} from a signed float-typed {@link NDArray}.
 	 * 
 	 * @param tensor 
 	 * 	The {@link NDArray} data is read from.
-	 * @return The {@link Img} built from the tensor of type {@link FloatType}.
+	 * @return The {@link RandomAccessibleInterval} built from the tensor of type {@link FloatType}.
 	 */
-	private static Img<FloatType> buildFromTensorFloat(NDArray tensor) {
-		long[] tensorShape = tensor.getShape().getShape();
-		final ArrayImgFactory<FloatType> factory = new ArrayImgFactory<>(new FloatType());
-		final Img<FloatType> outputImg = factory.create(tensorShape);
-		Cursor<FloatType> tensorCursor = outputImg.cursor();
+	private static RandomAccessibleInterval<FloatType> buildFromTensorFloat(NDArray tensor) {
+		long[] arrayShape = tensor.getShape().getShape();
+		long[] tensorShape = new long[arrayShape.length];
+		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		float[] flatArr = tensor.toFloatArray();
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			float val = flatArr[flatPos];
-			tensorCursor.get().set(val);
-		}
-		return outputImg;
+		RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(flatArr, tensorShape);
+		MixedTransform t = new MixedTransform( tensorShape.length, tensorShape.length );
+		int[] transposeAxesOrderChange = new int[tensorShape.length];
+		for (int i = 0; i < tensorShape.length; i ++) transposeAxesOrderChange[i] = tensorShape.length - 1 - i;
+		t.setComponentMapping(transposeAxesOrderChange);
+		long[] minMax = new long[tensorShape.length];
+		for (int i = 0; i < tensorShape.length; i ++) minMax[i * 2 + 1] = tensorShape[i];
+		return Views.interval(new MixedTransformView<FloatType>( rai, t ), 
+				Intervals.createMinMax(tensorShape));
 	}
 
 	/**
-	 * Builds a {@link Img} from a signed double-typed {@link NDArray}.
+	 * Builds a {@link RandomAccessibleInterval} from a signed double-typed {@link NDArray}.
 	 * 
 	 * @param tensor 
 	 * 	The {@link NDArray} data is read from.
-	 * @return The {@link Img} built from the tensor of type {@link DoubleType}.
+	 * @return The {@link RandomAccessibleInterval} built from the tensor of type {@link DoubleType}.
 	 */
-	private static Img<DoubleType> buildFromTensorDouble(NDArray tensor) {
-		long[] tensorShape = tensor.getShape().getShape();
-		final ArrayImgFactory<DoubleType> factory = new ArrayImgFactory<>(new DoubleType());
-		final Img<DoubleType> outputImg = factory.create(tensorShape);
-		Cursor<DoubleType> tensorCursor = outputImg.cursor();
+	private static RandomAccessibleInterval<DoubleType> buildFromTensorDouble(NDArray tensor) {
+		long[] arrayShape = tensor.getShape().getShape();
+		long[] tensorShape = new long[arrayShape.length];
+		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		double[] flatArr = tensor.toDoubleArray();
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			double val = flatArr[flatPos];
-			tensorCursor.get().set(val);
-		}
-		return outputImg;
+		RandomAccessibleInterval<DoubleType> rai = ArrayImgs.doubles(flatArr, tensorShape);
+		MixedTransform t = new MixedTransform( tensorShape.length, tensorShape.length );
+		int[] transposeAxesOrderChange = new int[tensorShape.length];
+		for (int i = 0; i < tensorShape.length; i ++) transposeAxesOrderChange[i] = tensorShape.length - 1 - i;
+		t.setComponentMapping(transposeAxesOrderChange);
+		long[] minMax = new long[tensorShape.length];
+		for (int i = 0; i < tensorShape.length; i ++) minMax[i * 2 + 1] = tensorShape[i];
+		return Views.interval(new MixedTransformView<DoubleType>( rai, t ), 
+				Intervals.createMinMax(tensorShape));
 	}
 }
