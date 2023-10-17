@@ -102,7 +102,7 @@ public class NDArrayBuilder {
 			return buildFromTensorInt((RandomAccessibleInterval<IntType>) tensor,
 				manager);
 		}
-		else if (Util.getTypeFromInterval(tensor) instanceof ByteType) {
+		else if (Util.getTypeFromInterval(tensor) instanceof FloatType) {
 			return buildFromTensorFloat((RandomAccessibleInterval<FloatType>) tensor,
 				manager);
 		}
