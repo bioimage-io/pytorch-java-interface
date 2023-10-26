@@ -33,6 +33,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import ai.djl.ndarray.NDArray;
+import io.bioimage.modelrunner.tensor.Utils;
 
 /**
 * A {@link RandomAccessibleInterval} builder for Pytorch {@link ai.djl.ndarray.NDArray} objects.

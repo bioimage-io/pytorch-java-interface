@@ -22,7 +22,7 @@
 package io.bioimage.modelrunner.pytorch.tensor;
 
 import io.bioimage.modelrunner.tensor.Tensor;
-
+import io.bioimage.modelrunner.tensor.Utils;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.blocks.PrimitiveBlocks;
 import net.imglib2.img.Img;
