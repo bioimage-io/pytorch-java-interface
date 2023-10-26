@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>34.1.0</version>
+		<version>37.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -126,7 +126,7 @@
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
 		<djl-api.version>0.22.1</djl-api.version>
-		<dl-modelrunner.version>0.4.0</dl-modelrunner.version>
+		<dl-modelrunner.version>0.4.1</dl-modelrunner.version>
 		<pytorch-engine.version>0.22.1</pytorch-engine.version>
 		<pytorch-jni.version>2.0.0-0.22.1</pytorch-jni.version>
 	</properties>
@@ -159,10 +159,6 @@
 			<groupId>ai.djl.pytorch</groupId>
 			<artifactId>pytorch-jni</artifactId>
 			<version>${pytorch-jni.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
