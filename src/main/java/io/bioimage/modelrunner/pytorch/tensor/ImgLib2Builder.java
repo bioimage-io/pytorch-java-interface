@@ -28,6 +28,7 @@ import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -68,6 +69,8 @@ public class ImgLib2Builder {
 				return (RandomAccessibleInterval<T>) buildFromTensorFloat(tensor);
 			case FLOAT64:
 				return (RandomAccessibleInterval<T>) buildFromTensorDouble(tensor);
+			case INT64:
+				return (RandomAccessibleInterval<T>) buildFromTensorLong(tensor);
 			default:
 				throw new IllegalArgumentException("Unsupported tensor type: " + tensor
 					.getDataType());
@@ -151,6 +154,22 @@ public class ImgLib2Builder {
 		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		double[] flatArr = tensor.toDoubleArray();
 		RandomAccessibleInterval<DoubleType> rai = ArrayImgs.doubles(flatArr, tensorShape);
+		return Utils.transpose(rai);
+	}
+
+	/**
+	 * Builds a {@link RandomAccessibleInterval} from a signed long-typed {@link NDArray}.
+	 * 
+	 * @param tensor 
+	 * 	The {@link NDArray} data is read from.
+	 * @return The {@link RandomAccessibleInterval} built from the tensor of type {@link DoubleType}.
+	 */
+	private static RandomAccessibleInterval<LongType> buildFromTensorLong(NDArray tensor) {
+		long[] arrayShape = tensor.getShape().getShape();
+		long[] tensorShape = new long[arrayShape.length];
+		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
+		long[] flatArr = tensor.toLongArray();
+		RandomAccessibleInterval<LongType> rai = ArrayImgs.longs(flatArr, tensorShape);
 		return Utils.transpose(rai);
 	}
 }
