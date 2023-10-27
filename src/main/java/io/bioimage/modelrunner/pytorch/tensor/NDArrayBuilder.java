@@ -129,6 +129,7 @@ public class NDArrayBuilder {
 	private static NDArray buildFromTensorByte(
 		RandomAccessibleInterval<ByteType> tensor, NDManager manager)
 	{
+		long[] ogShape = tensor.dimensionsAsLongArray();
 		tensor = Utils.transpose(tensor);
 		PrimitiveBlocks< ByteType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
@@ -139,7 +140,7 @@ public class NDArrayBuilder {
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
 		blocks.copy( new long[tensorShape.length], flatArr, sArr );
-		NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
+		NDArray ndarray = manager.create(flatArr, new Shape(ogShape));
 		return ndarray;
 	}
 
@@ -156,6 +157,7 @@ public class NDArrayBuilder {
 	private static NDArray buildFromTensorInt(
 		RandomAccessibleInterval<IntType> tensor, NDManager manager)
 	{
+		long[] ogShape = tensor.dimensionsAsLongArray();
 		tensor = Utils.transpose(tensor);
 		PrimitiveBlocks< IntType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
@@ -166,7 +168,7 @@ public class NDArrayBuilder {
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
 		blocks.copy( new long[tensorShape.length], flatArr, sArr );
-		NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
+		NDArray ndarray = manager.create(flatArr, new Shape(ogShape));
 		return ndarray;
 	}
 
@@ -183,6 +185,7 @@ public class NDArrayBuilder {
 	private static NDArray buildFromTensorFloat(
 		RandomAccessibleInterval<FloatType> tensor, NDManager manager)
 	{
+		long[] ogShape = tensor.dimensionsAsLongArray();
 		tensor = Utils.transpose(tensor);
 		PrimitiveBlocks< FloatType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
@@ -193,7 +196,7 @@ public class NDArrayBuilder {
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
 		blocks.copy( new long[tensorShape.length], flatArr, sArr );
-		NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
+		NDArray ndarray = manager.create(flatArr, new Shape(ogShape));
 		return ndarray;
 	}
 
@@ -210,6 +213,7 @@ public class NDArrayBuilder {
 	private static NDArray buildFromTensorDouble(
 		RandomAccessibleInterval<DoubleType> tensor, NDManager manager)
 	{
+		long[] ogShape = tensor.dimensionsAsLongArray();
 		tensor = Utils.transpose(tensor);
 		PrimitiveBlocks< DoubleType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
@@ -220,7 +224,7 @@ public class NDArrayBuilder {
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
 		blocks.copy( new long[tensorShape.length], flatArr, sArr );
-		NDArray ndarray = manager.create(flatArr, new Shape(tensorShape));
+		NDArray ndarray = manager.create(flatArr, new Shape(ogShape));
 		return ndarray;
 	}
 }
