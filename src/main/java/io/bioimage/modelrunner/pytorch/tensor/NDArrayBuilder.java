@@ -23,6 +23,8 @@ package io.bioimage.modelrunner.pytorch.tensor;
 
 import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.tensor.Utils;
+import io.bioimage.modelrunner.utils.CommonUtils;
+import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.blocks.PrimitiveBlocks;
 import net.imglib2.img.Img;
@@ -32,6 +34,9 @@ import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
+import net.imglib2.view.Views;
+
+import java.util.Arrays;
 
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
@@ -130,8 +135,10 @@ public class NDArrayBuilder {
 		RandomAccessibleInterval<ByteType> tensor, NDManager manager)
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
+		if (CommonUtils.int32Overflows(ogShape))
+			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
+								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
-		PrimitiveBlocks< ByteType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
 		for (long ll : tensorShape) size *= ll;
@@ -139,7 +146,13 @@ public class NDArrayBuilder {
 		int[] sArr = new int[tensorShape.length];
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
-		blocks.copy( tensor.minAsLongArray(), flatArr, sArr );
+
+		Cursor<ByteType> cursor = Views.flatIterable(tensor).cursor();
+		int i = 0;
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			flatArr[i ++] = cursor.get().getByte();
+		}
 		NDArray ndarray = manager.create(flatArr, new Shape(ogShape));
 		return ndarray;
 	}
@@ -158,8 +171,10 @@ public class NDArrayBuilder {
 		RandomAccessibleInterval<IntType> tensor, NDManager manager)
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
+		if (CommonUtils.int32Overflows(ogShape))
+			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
+								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
-		PrimitiveBlocks< IntType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
 		for (long ll : tensorShape) size *= ll;
@@ -167,7 +182,13 @@ public class NDArrayBuilder {
 		int[] sArr = new int[tensorShape.length];
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
-		blocks.copy( tensor.minAsLongArray(), flatArr, sArr );
+
+		Cursor<IntType> cursor = Views.flatIterable(tensor).cursor();
+		int i = 0;
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			flatArr[i ++] = cursor.get().getInt();
+		}
 		NDArray ndarray = manager.create(flatArr, new Shape(ogShape));
 		return ndarray;
 	}
@@ -186,8 +207,10 @@ public class NDArrayBuilder {
 		RandomAccessibleInterval<FloatType> tensor, NDManager manager)
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
+		if (CommonUtils.int32Overflows(ogShape))
+			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
+								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
-		PrimitiveBlocks< FloatType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
 		for (long ll : tensorShape) size *= ll;
@@ -195,7 +218,13 @@ public class NDArrayBuilder {
 		int[] sArr = new int[tensorShape.length];
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
-		blocks.copy( tensor.minAsLongArray(), flatArr, sArr );
+
+		Cursor<FloatType> cursor = Views.flatIterable(tensor).cursor();
+		int i = 0;
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			flatArr[i ++] = cursor.get().get();
+		}
 		NDArray ndarray = manager.create(flatArr, new Shape(ogShape));
 		return ndarray;
 	}
@@ -214,8 +243,10 @@ public class NDArrayBuilder {
 		RandomAccessibleInterval<DoubleType> tensor, NDManager manager)
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
+		if (CommonUtils.int32Overflows(ogShape))
+			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
+								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
-		PrimitiveBlocks< DoubleType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
 		for (long ll : tensorShape) size *= ll;
@@ -223,7 +254,13 @@ public class NDArrayBuilder {
 		int[] sArr = new int[tensorShape.length];
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
-		blocks.copy( tensor.minAsLongArray(), flatArr, sArr );
+
+		Cursor<DoubleType> cursor = Views.flatIterable(tensor).cursor();
+		int i = 0;
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			flatArr[i ++] = cursor.get().get();
+		}
 		NDArray ndarray = manager.create(flatArr, new Shape(ogShape));
 		return ndarray;
 	}
