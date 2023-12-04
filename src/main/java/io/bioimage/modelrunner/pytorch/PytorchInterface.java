@@ -25,6 +25,7 @@ import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
 import io.bioimage.modelrunner.pytorch.tensor.NDArrayBuilder;
+import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
 
 import java.io.File;
@@ -79,6 +80,22 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 * dlmodel-runner
 	 */
 	public PytorchInterface() {}
+	
+    /**
+     * Private constructor that can only be launched from the class to create a separate
+     * process to avoid the conflicts that occur in the same process between Pytorch1 and 2
+     * @param doInterprocessing
+     * 	whether to do interprocessing or not
+     * @throws IOException if the temp dir is not found
+     */
+    private PytorchInterface(boolean doInterprocessing) throws IOException
+    {
+    	interprocessing = doInterprocessing;
+    }
+	
+	private String modelFolder;
+	
+	private boolean interprocessing = false;
 
 	/**
 	 * {@inheritDoc}
@@ -91,6 +108,10 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	public void run(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors)
 		throws RunModelException
 	{
+		if (interprocessing) {
+			runInterprocessing(inputTensors, outputTensors);
+			return;
+		}
 		try (NDManager manager = NDManager.newBaseManager()) {
 			// Create the input lists of engine tensors (NDArrays) and their
 			// corresponding names
@@ -122,6 +143,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	public void loadModel(String modelFolder, String modelSource)
 		throws LoadModelException
 	{
+		this.modelFolder = modelFolder;
+		if (interprocessing) 
+			return;
 		String modelName = new File(modelSource).getName();
 		modelName = modelName.substring(0, modelName.indexOf(".pt"));
 		try {
@@ -239,5 +263,43 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		else if (e instanceof IOException) {
 			System.out.println("An error occurred accessing the model file.");
 		}
+	}
+	
+	/**
+	 * MEthod  that makes all the arrangements
+	 * to create another process, communicate the model info and tensors to the other 
+	 * process and then retrieve the results of the other process
+	 * @param inputTensors
+	 * 	tensors that are going to be run on the model
+	 * @param outputTensors
+	 * 	expected results of the model
+	 * @throws RunModelException if there is any issue running the model
+	 */
+	public void runInterprocessing(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors) throws RunModelException {
+		createTensorsForInterprocessing(inputTensors);
+		createTensorsForInterprocessing(outputTensors);
+		try {
+			List<String> args = getProcessCommandsWithoutArgs();
+			for (Tensor tensor : inputTensors) {args.add(getFilename4Tensor(tensor.getName()) + INPUT_FILE_TERMINATION);}
+			for (Tensor tensor : outputTensors) {args.add(getFilename4Tensor(tensor.getName()) + OUTPUT_FILE_TERMINATION);}
+			ProcessBuilder builder = new ProcessBuilder(args);
+			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
+	        process = builder.start();
+	        int result = process.waitFor();
+	        process.destroy();
+	        if (result != 0)
+	    		throw new RunModelException("Error executing the Tensorflow 2 model in"
+	        			+ " a separate process. The process was not terminated correctly.");
+	        			// TODO remove + System.lineSeparator() + readProcessStringOutput(process));
+		} catch (RunModelException e) {
+			closeModel();
+			throw e;
+		} catch (Exception e) {
+			closeModel();
+			throw new RunModelException(e.toString());
+		}
+		
+		retrieveInterprocessingTensors(outputTensors);
 	}
 }
