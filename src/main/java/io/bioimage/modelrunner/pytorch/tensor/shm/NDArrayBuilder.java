@@ -106,10 +106,12 @@ public class NDArrayBuilder {
 	 * @return The {@link NDArray} built from the {@link RandomAccessibleInterval}.
 	 * @throws IllegalArgumentException if the {@link RandomAccessibleInterval} is not supported
 	 */
-	public static <T extends Type<T>> NDArray build(
-		RandomAccessibleInterval<T> tensor, NDManager manager)
-		throws IllegalArgumentException
+	public static <T extends Type<T>> NDArray build(String memoryName, NDManager manager) throws IllegalArgumentException
 	{
+		
+		
+		
+		
 		if (Util.getTypeFromInterval(tensor) instanceof ByteType) {
 			return buildFromTensorByte((RandomAccessibleInterval<ByteType>) tensor,
 				manager);
