@@ -29,11 +29,13 @@ import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.utils.CommonUtils;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -47,6 +49,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import ai.djl.MalformedModelException;
 import ai.djl.engine.EngineException;
@@ -481,28 +484,28 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     		throw new IllegalArgumentException("Argument 0 of the main method, '" + modelSource + "' "
     				+ "should be the path to the wanted .pth weights file.");
     	}
-    	PytorchInterface tfInterface = new PytorchInterface(false);
+    	PytorchInterface ptInterface = new PytorchInterface(false);
     	
-    	tfInterface.loadModel(new File(modelSource).getParent(), modelSource);
-    	
-    	HashMap<String, List<String>> map = tfInterface.getInputTensorsFileNames(args);
-    	List<String> inputNames = map.get(INPUTS_MAP_KEY);
-    	List<Tensor<?>> inputList = inputNames.stream().map(n -> {
-									try {
-										return tfInterface.retrieveInterprocessingTensorsByName(n);
-									} catch (RunModelException e) {
-										return null;
-									}
-								}).collect(Collectors.toList());
-    	List<String> outputNames = map.get(OUTPUTS_MAP_KEY);
-    	List<Tensor<?>> outputList = outputNames.stream().map(n -> {
-									try {
-										return tfInterface.retrieveInterprocessingTensorsByName(n);
-									} catch (RunModelException e) {
-										return null;
-									}
-								}).collect(Collectors.toList());
-    	tfInterface.run(inputList, outputList);
-    	tfInterface.createTensorsForInterprocessing(outputList);
+    	ptInterface.loadModel(new File(modelSource).getParent(), modelSource);
+    	Gson gson = new Gson();
+        Type mapType = new TypeToken<HashMap<String, Object>>() {}.getType();
+        List<Tensor<?>> inputList = new ArrayList<Tensor<?>>();
+        List<Tensor<?>> outputList = new ArrayList<Tensor<?>>();
+    	for (int i = 1; i < args.length; i ++) {
+            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
+            if ((boolean) map.get("isInput")) {
+            } else {
+            	
+            }
+    	}
+    	ptInterface.run(inputList, outputList);
 	}
+    
+    private static Tensor<?> decodeTensor(HashMap<String, Object> map) {
+    	String memoryName = (String) map.get("memoryName");
+    	boolean exists = (boolean) map.get("exists");
+    	RandomAccessibleInterval<?> rai = SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(memoryName);
+    	SharedMemoryArray.buildImgLib2FromSHMA((String) map.get("memoryName"), (long[]) map.get("shape"), false, modelSource);
+
+    }
 }
