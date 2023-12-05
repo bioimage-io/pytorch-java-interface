@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 
@@ -293,38 +294,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 */
 	public void runInterprocessing(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors) throws RunModelException {
 		int i = 0;
-		List<SharedMemoryArray> shmaList = new ArrayList<SharedMemoryArray>();
-		List<String> encodedInputTensors = new ArrayList<String>();
-		Gson gson = new Gson();
-		for (Tensor<?> tt : inputTensors) {
-			shmaList.add(SharedMemoryArray.buildSHMA(tt.getData()));
-			HashMap<String, Object> map = new HashMap<String, Object>();
-			map.put("name", tt.getName());
-			map.put("shape", tt.getShape());
-			map.put("dtype", CommonUtils.getDataType(tt.getData()));
-			map.put("isInput", true);
-			map.put("memoryName", shmaList.get(i).getMemoryLocationName());
-			encodedInputTensors.add(gson.toJson(map));
-	        i ++;
-		}
-		List<String> encodedOutputTensors = new ArrayList<String>();
-		for (Tensor<?> tt : outputTensors) {
-			HashMap<String, Object> map = new HashMap<String, Object>();
-			map.put("name", tt.getName());
-			map.put("shape", tt.getShape());
-			map.put("dtype", CommonUtils.getDataType(tt.getData()));
-			map.put("isInput", false);
-			if (!tt.isEmpty()) {
-				shmaList.add(SharedMemoryArray.buildSHMA(tt.getData()));
-				map.put("memoryName", shmaList.get(i).getMemoryLocationName());
-			}
-			encodedOutputTensors.add(gson.toJson(map));
-	        i ++;
-		}
+		shmaList = new ArrayList<SharedMemoryArray>();
 		try {
 			List<String> args = getProcessCommandsWithoutArgs();
-			for (Tensor tensor : inputTensors) {args.add(getFilename4Tensor(tensor.getName()) + INPUT_FILE_TERMINATION);}
-			for (Tensor tensor : outputTensors) {args.add(getFilename4Tensor(tensor.getName()) + OUTPUT_FILE_TERMINATION);}
+			args.addAll(encodeInputs(inputTensors));
+			args.addAll(encodeOutputs(outputTensors));
 			ProcessBuilder builder = new ProcessBuilder(args);
 			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
 			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -344,6 +318,46 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		}
 		
 		retrieveInterprocessingTensors(outputTensors);
+	}
+	
+	
+	private List<String> encodeInputs(List<Tensor<?>> inputTensors) {
+		int i = 0;
+		List<String> encodedInputTensors = new ArrayList<String>();
+		Gson gson = new Gson();
+		for (Tensor<?> tt : inputTensors) {
+			shmaList.add(SharedMemoryArray.buildSHMA(tt.getData()));
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			map.put("name", tt.getName());
+			map.put("shape", tt.getShape());
+			map.put("dtype", CommonUtils.getDataType(tt.getData()));
+			map.put("isInput", true);
+			map.put("memoryName", shmaList.get(i).getMemoryLocationName());
+			encodedInputTensors.add(gson.toJson(map));
+	        i ++;
+		}
+		return encodedInputTensors;
+	}
+	
+	
+	private List<String> encodeOutputs(List<Tensor<?>> outputTensors) {
+		int i = 0;
+		Gson gson = new Gson();
+		List<String> encodedOutputTensors = new ArrayList<String>();
+		for (Tensor<?> tt : outputTensors) {
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			map.put("name", tt.getName());
+			map.put("shape", tt.getShape());
+			map.put("dtype", CommonUtils.getDataType(tt.getData()));
+			map.put("isInput", false);
+			if (!tt.isEmpty()) {
+				shmaList.add(SharedMemoryArray.buildSHMA(tt.getData()));
+				map.put("memoryName", shmaList.get(i).getMemoryLocationName());
+			}
+			encodedOutputTensors.add(gson.toJson(map));
+	        i ++;
+		}
+		return encodedOutputTensors;
 	}
 	
 	/**
@@ -423,5 +437,72 @@ public class PytorchInterface implements DeepLearningEngineInterface {
         	}
         }
         return javaBin;
+	}
+	
+	
+	/**
+	 * Methods to run interprocessing and be able to run Pytorch 1 and 2
+	 * This method checks that the arguments are correct, retrieves the input and output
+	 * tensors, loads the model, makes inference with it and finally sends the tensors
+	 * to the original process
+     * 
+     * @param args
+     * 	arguments of the program:
+     * 		- Path to the model folder
+     * 		- Encoded input 0
+     * 		- Encoded input 1
+     * 		- ...
+     * 		- Encoded input n
+     * 		- Encoded output 0
+     * 		- Encoded output 1
+     * 		- ...
+     * 		- Encoded output n
+     * @throws LoadModelException if there is any error loading the model
+     * @throws IOException	if there is any error reading or writing any file or with the paths
+     * @throws RunModelException	if there is any error running the model
+     */
+    public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
+    	// Unpack the args needed
+    	if (args.length < 3)
+    		throw new IllegalArgumentException("Error exectuting Pytorch, "
+    				+ "at least35 arguments are required:" + System.lineSeparator()
+    				+ " - Path to the model weigths." + System.lineSeparator()
+    				+ " - Encoded input 1" + System.lineSeparator()
+    				+ " - Encoded input 2 (if exists)" + System.lineSeparator()
+    				+ " - ...." + System.lineSeparator()
+    				+ " - Encoded input n (if exists)" + System.lineSeparator()
+    				+ " - Encoded output 1" + System.lineSeparator()
+    				+ " - Encoded output 2 (if exists)" + System.lineSeparator()
+    				+ " - ...." + System.lineSeparator()
+    				+ " - Encoded output n (if exists)" + System.lineSeparator()
+    				);
+    	String modelSource = args[0];
+    	if (!(new File(modelSource).isFile())) {
+    		throw new IllegalArgumentException("Argument 0 of the main method, '" + modelSource + "' "
+    				+ "should be the path to the wanted .pth weights file.");
+    	}
+    	PytorchInterface tfInterface = new PytorchInterface(false);
+    	
+    	tfInterface.loadModel(new File(modelSource).getParent(), modelSource);
+    	
+    	HashMap<String, List<String>> map = tfInterface.getInputTensorsFileNames(args);
+    	List<String> inputNames = map.get(INPUTS_MAP_KEY);
+    	List<Tensor<?>> inputList = inputNames.stream().map(n -> {
+									try {
+										return tfInterface.retrieveInterprocessingTensorsByName(n);
+									} catch (RunModelException e) {
+										return null;
+									}
+								}).collect(Collectors.toList());
+    	List<String> outputNames = map.get(OUTPUTS_MAP_KEY);
+    	List<Tensor<?>> outputList = outputNames.stream().map(n -> {
+									try {
+										return tfInterface.retrieveInterprocessingTensorsByName(n);
+									} catch (RunModelException e) {
+										return null;
+									}
+								}).collect(Collectors.toList());
+    	tfInterface.run(inputList, outputList);
+    	tfInterface.createTensorsForInterprocessing(outputList);
 	}
 }
