@@ -27,13 +27,25 @@ import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
 import io.bioimage.modelrunner.pytorch.tensor.NDArrayBuilder;
 import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
+import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
+import io.bioimage.modelrunner.utils.CommonUtils;
+import net.imglib2.type.NativeType;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+
+import com.google.gson.Gson;
 
 import ai.djl.MalformedModelException;
 import ai.djl.engine.EngineException;
@@ -74,6 +86,14 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 * The Pytorch model loaded with the DJL API
 	 */
 	private ZooModel<NDList, NDList> model;
+	
+	private String modelFolder;
+	
+	private boolean interprocessing = false;
+	
+	private Process process;
+	
+	private List<SharedMemoryArray> shmaList;
 
 	/**
 	 * Constructor for the interface. It is going to be called from the 
@@ -92,10 +112,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     {
     	interprocessing = doInterprocessing;
     }
-	
-	private String modelFolder;
-	
-	private boolean interprocessing = false;
 
 	/**
 	 * {@inheritDoc}
@@ -276,8 +292,35 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 * @throws RunModelException if there is any issue running the model
 	 */
 	public void runInterprocessing(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors) throws RunModelException {
-		createTensorsForInterprocessing(inputTensors);
-		createTensorsForInterprocessing(outputTensors);
+		int i = 0;
+		List<SharedMemoryArray> shmaList = new ArrayList<SharedMemoryArray>();
+		List<String> encodedInputTensors = new ArrayList<String>();
+		Gson gson = new Gson();
+		for (Tensor<?> tt : inputTensors) {
+			shmaList.add(SharedMemoryArray.buildSHMA(tt.getData()));
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			map.put("name", tt.getName());
+			map.put("shape", tt.getShape());
+			map.put("dtype", CommonUtils.getDataType(tt.getData()));
+			map.put("isInput", true);
+			map.put("memoryName", shmaList.get(i).getMemoryLocationName());
+			encodedInputTensors.add(gson.toJson(map));
+	        i ++;
+		}
+		List<String> encodedOutputTensors = new ArrayList<String>();
+		for (Tensor<?> tt : outputTensors) {
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			map.put("name", tt.getName());
+			map.put("shape", tt.getShape());
+			map.put("dtype", CommonUtils.getDataType(tt.getData()));
+			map.put("isInput", false);
+			if (!tt.isEmpty()) {
+				shmaList.add(SharedMemoryArray.buildSHMA(tt.getData()));
+				map.put("memoryName", shmaList.get(i).getMemoryLocationName());
+			}
+			encodedOutputTensors.add(gson.toJson(map));
+	        i ++;
+		}
 		try {
 			List<String> args = getProcessCommandsWithoutArgs();
 			for (Tensor tensor : inputTensors) {args.add(getFilename4Tensor(tensor.getName()) + INPUT_FILE_TERMINATION);}
@@ -301,5 +344,84 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		}
 		
 		retrieveInterprocessingTensors(outputTensors);
+	}
+	
+	/**
+	 * Create the arguments needed to execute Pytorch in another 
+	 * process with the corresponding tensors
+	 * @return the command used to call the separate process
+	 * @throws IOException if the command needed to execute interprocessing is too long
+	 * @throws URISyntaxException if there is any error with the URIs retrieved from the classes
+	 */
+	private List<String> getProcessCommandsWithoutArgs() throws IOException, URISyntaxException {
+		String javaHome = System.getProperty("java.home");
+        String javaBin = javaHome +  File.separator + "bin" + File.separator + "java";
+
+        String modelrunnerPath = getPathFromClass(DeepLearningEngineInterface.class);
+        String imglib2Path = getPathFromClass(NativeType.class);
+        if (modelrunnerPath == null || (modelrunnerPath.endsWith("DeepLearningEngineInterface.class") 
+        		&& !modelrunnerPath.contains(File.pathSeparator)))
+        	modelrunnerPath = System.getProperty("java.class.path");
+        String classpath =  modelrunnerPath + File.pathSeparator + imglib2Path + File.pathSeparator;
+        ProtectionDomain protectionDomain = PytorchInterface.class.getProtectionDomain();
+        String codeSource = protectionDomain.getCodeSource().getLocation().getPath();
+        String f_name = URLDecoder.decode(codeSource, StandardCharsets.UTF_8.toString());
+	        for (File ff : new File(f_name).getParentFile().listFiles()) {
+	        	classpath += ff.getAbsolutePath() + File.pathSeparator;
+	        }
+        String className = PytorchInterface.class.getName();
+        List<String> command = new LinkedList<String>();
+        command.add(padSpecialJavaBin(javaBin));
+        command.add("-cp");
+        command.add(classpath);
+        command.add(className);
+        command.add(modelFolder);
+        return command;
+	}
+	
+	/**
+	 * Method that gets the path to the JAR from where a specific class is being loaded
+	 * @param clazz
+	 * 	class of interest
+	 * @return the path to the JAR that contains the class
+	 * @throws UnsupportedEncodingException if the url of the JAR is not encoded in UTF-8
+	 */
+	private static String getPathFromClass(Class<?> clazz) throws UnsupportedEncodingException {
+	    String classResource = clazz.getName().replace('.', '/') + ".class";
+	    URL resourceUrl = clazz.getClassLoader().getResource(classResource);
+	    if (resourceUrl == null) {
+	        return null;
+	    }
+	    String urlString = resourceUrl.toString();
+	    if (urlString.startsWith("jar:")) {
+	        urlString = urlString.substring(4);
+	    }
+	    if (urlString.startsWith("file:/") && PlatformDetection.isWindows()) {
+	        urlString = urlString.substring(6);
+	    } else if (urlString.startsWith("file:/") && !PlatformDetection.isWindows()) {
+	        urlString = urlString.substring(5);
+	    }
+	    urlString = URLDecoder.decode(urlString, "UTF-8");
+	    File file = new File(urlString);
+	    String path = file.getAbsolutePath();
+	    if (path.lastIndexOf(".jar!") != -1)
+	    	path = path.substring(0, path.lastIndexOf(".jar!")) + ".jar";
+	    return path;
+	}
+	
+	/**
+	 * if java bin dir contains any special char, surround it by double quotes
+	 * @param javaBin
+	 * 	java bin dir
+	 * @return impored java bin dir if needed
+	 */
+	private static String padSpecialJavaBin(String javaBin) {
+		String[] specialChars = new String[] {" "};
+        for (String schar : specialChars) {
+        	if (javaBin.contains(schar) && PlatformDetection.isWindows()) {
+        		return "\"" + javaBin + "\"";
+        	}
+        }
+        return javaBin;
 	}
 }
