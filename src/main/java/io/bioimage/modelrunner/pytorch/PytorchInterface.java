@@ -497,26 +497,23 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			for (int i = 1; i < args.length; i ++) {
 	            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
 	            if ((boolean) map.get("isInput")) 
-	            	inputList.add(NDArrayShmBuilder.build((String) map.get("memoryName"), manager));   	
+	            	inputList.add(NDArrayShmBuilder.buildFromShma((String) map.get("memoryName"), manager));   	
 			}
 			// Run model
 			Predictor<NDList, NDList> predictor = ptInterface.model.newPredictor();
 			NDList outputNDArrays = predictor.predict(inputList);
 			// Fill the agnostic output tensors list with data from the inference
 			// result
-			fillOutputTensors(outputNDArrays, outputTensors);
+			int c = 0;
+			for (int i = 1; i < args.length; i ++) {
+	            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
+	            if (!((boolean) map.get("isInput"))) 
+	            	NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get("memoryName"));   	
+			}
 		}
-		catch (TranslateException e) {
+		catch (Exception e) {
 			e.printStackTrace();
-			throw new RunModelException(e.getMessage());
+			throw new RunModelException(e.toString());
 		}
 	}
-    
-    private static Tensor<?> decodeTensor(HashMap<String, Object> map) {
-    	String memoryName = (String) map.get("memoryName");
-    	boolean exists = (boolean) map.get("exists");
-    	RandomAccessibleInterval<?> rai = SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(memoryName);
-    	SharedMemoryArray.buildImgLib2FromSHMA((String) map.get("memoryName"), (long[]) map.get("shape"), false, modelSource);
-
-    }
 }

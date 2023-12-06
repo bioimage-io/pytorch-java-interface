@@ -22,6 +22,7 @@
 package io.bioimage.modelrunner.pytorch.tensor.shm;
 
 import io.bioimage.modelrunner.numpy.DecodeNumpy;
+import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
 import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.tensor.Utils;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
@@ -37,6 +38,7 @@ import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Cast;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 
@@ -74,7 +76,7 @@ public class NDArrayShmBuilder {
 	 * @return The {@link NDArray} built from the {@link RandomAccessibleInterval}.
 	 * @throws IllegalArgumentException if the {@link RandomAccessibleInterval} is not supported
 	 */
-	public static NDArray build(String memoryName, NDManager manager) throws IllegalArgumentException
+	public static NDArray buildFromShma(String memoryName, NDManager manager) throws IllegalArgumentException
 	{
 		
 		Map<String, Object> map = SharedMemoryArray.buildMapFromNumpyLikeSHMA(memoryName);
@@ -96,5 +98,10 @@ public class NDArrayShmBuilder {
 		}
 		NDArray ndarray = manager.create(buff, new Shape(shape));
 		return ndarray;
+	}
+	
+	public static void buildShma(NDArray tensor, String memoryName) throws IOException {
+		SharedMemoryArray shma = SharedMemoryArray.buildNumpyLikeSHMA(memoryName, Cast.unchecked(ImgLib2Builder.build(tensor)));
+		shma.close();
 	}
 }
