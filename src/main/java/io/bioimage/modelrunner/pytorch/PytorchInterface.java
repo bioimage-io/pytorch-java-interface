@@ -25,6 +25,7 @@ import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
 import io.bioimage.modelrunner.pytorch.tensor.NDArrayBuilder;
+import io.bioimage.modelrunner.pytorch.tensor.shm.NDArrayShmBuilder;
 import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
@@ -489,16 +490,26 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     	ptInterface.loadModel(new File(modelSource).getParent(), modelSource);
     	Gson gson = new Gson();
         Type mapType = new TypeToken<HashMap<String, Object>>() {}.getType();
-        List<Tensor<?>> inputList = new ArrayList<Tensor<?>>();
-        List<Tensor<?>> outputList = new ArrayList<Tensor<?>>();
-    	for (int i = 1; i < args.length; i ++) {
-            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
-            if ((boolean) map.get("isInput")) {
-            } else {
-            	
-            }
-    	}
-    	ptInterface.run(inputList, outputList);
+    	try (NDManager manager = NDManager.newBaseManager()) {
+			// Create the input lists of engine tensors (NDArrays) and their
+			// corresponding names
+			NDList inputList = new NDList();
+			for (int i = 1; i < args.length; i ++) {
+	            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
+	            if ((boolean) map.get("isInput")) 
+	            	inputList.add(NDArrayShmBuilder.build((String) map.get("memoryName"), manager));   	
+			}
+			// Run model
+			Predictor<NDList, NDList> predictor = ptInterface.model.newPredictor();
+			NDList outputNDArrays = predictor.predict(inputList);
+			// Fill the agnostic output tensors list with data from the inference
+			// result
+			fillOutputTensors(outputNDArrays, outputTensors);
+		}
+		catch (TranslateException e) {
+			e.printStackTrace();
+			throw new RunModelException(e.getMessage());
+		}
 	}
     
     private static Tensor<?> decodeTensor(HashMap<String, Object> map) {

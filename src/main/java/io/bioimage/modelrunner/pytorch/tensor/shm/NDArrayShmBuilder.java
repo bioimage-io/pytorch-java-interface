@@ -62,7 +62,7 @@ import ai.djl.ndarray.types.Shape;
  * 
  * @author Carlos Garcia Lopez de Haro
  */
-public class NDArrayBuilder {
+public class NDArrayShmBuilder {
 
 	/**
 	 * Creates a {@link NDArray} from a given {@link RandomAccessibleInterval}.
