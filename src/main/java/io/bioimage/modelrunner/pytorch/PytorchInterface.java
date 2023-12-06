@@ -33,8 +33,10 @@ import io.bioimage.modelrunner.utils.CommonUtils;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
@@ -297,12 +299,12 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 * @throws RunModelException if there is any issue running the model
 	 */
 	public void runInterprocessing(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors) throws RunModelException {
-		int i = 0;
 		shmaList = new ArrayList<SharedMemoryArray>();
 		try {
 			List<String> args = getProcessCommandsWithoutArgs();
 			args.addAll(encodeInputs(inputTensors));
-			args.addAll(encodeOutputs(outputTensors));
+			List<String> encOuts = encodeOutputs(outputTensors);
+			args.addAll(encOuts);
 			ProcessBuilder builder = new ProcessBuilder(args);
 			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
 			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -311,8 +313,13 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	        process.destroy();
 	        if (result != 0)
 	    		throw new RunModelException("Error executing the Tensorflow 2 model in"
-	        			+ " a separate process. The process was not terminated correctly.");
-	        			// TODO remove + System.lineSeparator() + readProcessStringOutput(process));
+	        			+ " a separate process. The process was not terminated correctly."
+	        			+ System.lineSeparator() + readProcessStringOutput(process));
+	        for (int i = 0; i < outputTensors.size(); i ++)
+	        	outputTensors.get(i).setData(SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA((String) decodeString(args.get(0)).get("memoryName")));
+	        shmaList.stream().forEach(shm -> {
+				try { shm.close(); } catch (IOException e) { e.printStackTrace(); }
+			});
 		} catch (RunModelException e) {
 			closeModel();
 			throw e;
@@ -320,8 +327,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			closeModel();
 			throw new RunModelException(e.toString());
 		}
-		
-		retrieveInterprocessingTensors(outputTensors);
 	}
 	
 	
@@ -362,6 +367,15 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	        i ++;
 		}
 		return encodedOutputTensors;
+	}
+	
+	
+	private HashMap<String, Object> decodeString(String encoded) {
+		int i = 0;
+		Gson gson = new Gson();
+        Type mapType = new TypeToken<HashMap<String, Object>>() {}.getType();
+        HashMap<String, Object> map = gson.fromJson(encoded, mapType);
+		return map;
 	}
 	
 	/**
@@ -516,4 +530,25 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			throw new RunModelException(e.toString());
 		}
 	}
+    
+    /**
+     * MEthod to obtain the String output of the process in case something goes wrong
+     * @param process
+     * 	the process that executed the TF2 model
+     * @return the String output that we would have seen on the terminal
+     * @throws IOException if the output of the terminal cannot be seen
+     */
+    private static String readProcessStringOutput(Process process) throws IOException {
+    	BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		BufferedReader bufferedErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+		String text = "";
+		String line;
+	    while ((line = bufferedErrReader.readLine()) != null) {
+	    	text += line + System.lineSeparator();
+	    }
+	    while ((line = bufferedReader.readLine()) != null) {
+	    	text += line + System.lineSeparator();
+	    }
+	    return text;
+    }
 }
