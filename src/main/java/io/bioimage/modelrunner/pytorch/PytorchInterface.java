@@ -44,6 +44,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -169,9 +173,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		this.modelFolder = modelFolder;
 		if (interprocessing) 
 			return;
-		String modelName = new File(modelSource).getName();
-		modelName = modelName.substring(0, modelName.indexOf(".pt"));
 		try {
+			String modelName = getModelName(modelSource);
 			// Find the URL that corresponds to the file
 			URL url = new File(modelFolder).toURI().toURL();
 			// Define the location and type of the model
@@ -191,6 +194,29 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			throw new LoadModelException("Error loading a Pytorch model", e.getCause()
 				.toString());
 		}
+	}
+	
+	/**
+	 * Method that returns the file name and handles it in case the termination is not correct.
+	 * File names should always end with the extension .pt, thus if hte file has any other
+	 * extension, what the method does is to copy it into a new file with the new extension.
+	 * If the copiped file already exists, the method simply changes the extension
+	 * @param modelSource
+	 * 	path to the model weights
+	 * @return the model weights file name in the correct format, that is with .pt extension
+	 * @throws IOException if there is any error copying the file, if it needs to be copied
+	 */
+	private static String getModelName(String modelSource) throws IOException {
+		String modelName = new File(modelSource).getName();
+		int ind = modelName.indexOf(".pt");
+		if (ind == -1) {
+            Path sourcePath = Paths.get(modelSource);
+            Path targetPath = Paths.get(modelSource + ".pt");
+            if (!targetPath.toFile().isFile())
+            	Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            return getModelName(modelSource + ".pt");
+		}
+		return modelName.substring(0, ind);
 	}
 
 	/**
