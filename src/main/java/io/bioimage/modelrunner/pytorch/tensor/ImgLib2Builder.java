@@ -33,6 +33,7 @@ import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Cast;
 import ai.djl.ndarray.NDArray;
 import io.bioimage.modelrunner.tensor.Utils;
 
@@ -62,17 +63,17 @@ public class ImgLib2Builder {
 		// Create an ImgLib2 Img of the same type as the NDArray
 		switch (tensor.getDataType()) {
 			case UINT8:
-				return (RandomAccessibleInterval<T>) buildFromTensorUByte(tensor);
+				return Cast.unchecked(buildFromTensorUByte(tensor));
 			case INT8:
-				return (RandomAccessibleInterval<T>) buildFromTensorByte(tensor);
+				return Cast.unchecked(buildFromTensorByte(tensor));
 			case INT32:
-				return (RandomAccessibleInterval<T>) buildFromTensorInt(tensor);
+				return Cast.unchecked(buildFromTensorInt(tensor));
 			case FLOAT32:
-				return (RandomAccessibleInterval<T>) buildFromTensorFloat(tensor);
+				return Cast.unchecked(buildFromTensorFloat(tensor));
 			case FLOAT64:
-				return (RandomAccessibleInterval<T>) buildFromTensorDouble(tensor);
+				return Cast.unchecked(buildFromTensorDouble(tensor));
 			case INT64:
-				return (RandomAccessibleInterval<T>) buildFromTensorLong(tensor);
+				return Cast.unchecked(buildFromTensorLong(tensor));
 			default:
 				throw new IllegalArgumentException("Unsupported tensor type: " + tensor
 					.getDataType());
