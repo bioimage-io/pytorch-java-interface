@@ -30,7 +30,10 @@ import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.utils.CommonUtils;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.real.FloatType;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -96,9 +99,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 */
 	private ZooModel<NDList, NDList> model;
 	
-	private String modelFolder;
+	private String modelSource;
 	
-	private boolean interprocessing = false;
+	private boolean interprocessing = true;
 	
 	private Process process;
 	
@@ -168,7 +171,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	public void loadModel(String modelFolder, String modelSource)
 		throws LoadModelException
 	{
-		this.modelFolder = modelFolder;
+		this.modelSource = modelSource;
 		if (interprocessing) 
 			return;
 		try {
@@ -329,6 +332,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			args.addAll(encodeInputs(inputTensors));
 			List<String> encOuts = encodeOutputs(outputTensors);
 			args.addAll(encOuts);
+			//main(new String[] {modelSource, encodeInputs(inputTensors).get(0), encodeOutputs(outputTensors).get(0)});
 			ProcessBuilder builder = new ProcessBuilder(args);
 			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
 			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -336,18 +340,18 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	        int result = process.waitFor();
 	        process.destroy();
 	        if (result != 0)
-	    		throw new RunModelException("Error executing the Tensorflow 2 model in"
+	    		throw new RunModelException("Error executing the Pytorch model in"
 	        			+ " a separate process. The process was not terminated correctly."
 	        			+ System.lineSeparator() + readProcessStringOutput(process));
 	        for (int i = 0; i < outputTensors.size(); i ++)
-	        	outputTensors.get(i).setData(SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA((String) decodeString(args.get(0)).get("memoryName")));
+	        	outputTensors.get(i).setData(SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA((String) decodeString(encOuts.get(0)).get("memoryName")));
 	        shmaList.stream().forEach(shm -> {
 				try { shm.close(); } catch (IOException e) { e.printStackTrace(); }
 			});
-		} catch (RunModelException e) {
-			closeModel();
-			throw e;
 		} catch (Exception e) {
+			shmaList.forEach(shm -> {
+				try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
+			});
 			closeModel();
 			throw new RunModelException(e.toString());
 		}
@@ -359,7 +363,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		List<String> encodedInputTensors = new ArrayList<String>();
 		Gson gson = new Gson();
 		for (Tensor<?> tt : inputTensors) {
-			shmaList.add(SharedMemoryArray.buildSHMA(tt.getData()));
+			shmaList.add(SharedMemoryArray.buildNumpyLikeSHMA(tt.getData()));
 			HashMap<String, Object> map = new HashMap<String, Object>();
 			map.put("name", tt.getName());
 			map.put("shape", tt.getShape());
@@ -380,12 +384,17 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		for (Tensor<?> tt : outputTensors) {
 			HashMap<String, Object> map = new HashMap<String, Object>();
 			map.put("name", tt.getName());
-			map.put("shape", tt.getShape());
-			map.put("dtype", CommonUtils.getDataType(tt.getData()));
 			map.put("isInput", false);
 			if (!tt.isEmpty()) {
-				shmaList.add(SharedMemoryArray.buildSHMA(tt.getData()));
-				map.put("memoryName", shmaList.get(i).getMemoryLocationName());
+				map.put("shape", tt.getShape());
+				map.put("dtype", CommonUtils.getDataType(tt.getData()));
+				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(tt.getData());
+				shmaList.add(shma);
+				map.put("memoryName", shma.getMemoryLocationName());
+			} else {
+				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(ArrayImgs.bytes(new long[] {1}));
+				shmaList.add(shma);
+				map.put("memoryName", shma.getMemoryLocationName());
 			}
 			encodedOutputTensors.add(gson.toJson(map));
 	        i ++;
@@ -395,7 +404,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	
 	
 	private HashMap<String, Object> decodeString(String encoded) {
-		int i = 0;
 		Gson gson = new Gson();
         Type mapType = new TypeToken<HashMap<String, Object>>() {}.getType();
         HashMap<String, Object> map = gson.fromJson(encoded, mapType);
@@ -431,7 +439,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
         command.add("-cp");
         command.add(classpath);
         command.add(className);
-        command.add(modelFolder);
+        command.add(modelSource);
         return command;
 	}
 	
@@ -504,6 +512,20 @@ public class PytorchInterface implements DeepLearningEngineInterface {
      * @throws RunModelException	if there is any error running the model
      */
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
+    	if (args.length == 0) {
+	    	String modelFolder = "/home/carlos/git/deep-icy/models/CebraNET Cellular Membranes in Volume SEM_08122023_020403";
+	    	String modelSourc = modelFolder + "/weights.torchscript";
+	    	PytorchInterface pi = new PytorchInterface();
+	    	pi.loadModel(modelFolder, modelSourc);
+	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 64, 64, 64});
+	    	Tensor<?> inp = Tensor.build("aa", "bcyxz", rai);
+	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bcyxz");
+	    	List<Tensor<?>> ins = new ArrayList<Tensor<?>>();
+	    	List<Tensor<?>> ous = new ArrayList<Tensor<?>>();
+	    	ins.add(inp);
+	    	ous.add(out);
+	    	pi.run(ins, ous);
+    	}
     	// Unpack the args needed
     	if (args.length < 3)
     		throw new IllegalArgumentException("Error exectuting Pytorch, "
