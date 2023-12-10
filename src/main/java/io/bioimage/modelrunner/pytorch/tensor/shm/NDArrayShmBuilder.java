@@ -101,7 +101,6 @@ public class NDArrayShmBuilder {
 	}
 	
 	public static void buildShma(NDArray tensor, String memoryName) throws IOException {
-		SharedMemoryArray shma = SharedMemoryArray.buildNumpyLikeSHMA(memoryName, Cast.unchecked(ImgLib2Builder.build(tensor)));
-		shma.close();
+		SharedMemoryArray.buildNumpyLikeSHMA(memoryName, Cast.unchecked(ImgLib2Builder.build(tensor)));
 	}
 }

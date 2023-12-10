@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -392,9 +393,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 				shmaList.add(shma);
 				map.put("memoryName", shma.getMemoryLocationName());
 			} else {
-				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(ArrayImgs.bytes(new long[] {1}));
-				shmaList.add(shma);
-				map.put("memoryName", shma.getMemoryLocationName());
+				map.put("memoryName", "/shm-" + UUID.randomUUID());
 			}
 			encodedOutputTensors.add(gson.toJson(map));
 	        i ++;
@@ -525,9 +524,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	    	ins.add(inp);
 	    	ous.add(out);
 	    	pi.run(ins, ous);
+	    	System.out.println(false);
+	    	return;
     	}
     	// Unpack the args needed
-    	if (args.length < 3)
+    	 if (args.length < 3)
     		throw new IllegalArgumentException("Error exectuting Pytorch, "
     				+ "at least35 arguments are required:" + System.lineSeparator()
     				+ " - Path to the model weigths." + System.lineSeparator()
