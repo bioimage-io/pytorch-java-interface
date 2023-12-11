@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -106,7 +107,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	
 	private Process process;
 	
-	private List<SharedMemoryArray> shmaList;
+	private List<SharedMemoryArray> shmaList = new ArrayList<SharedMemoryArray>();
+	
+	private List<String> shmaNamesList = new ArrayList<String>();
 
 	/**
 	 * Constructor for the interface. It is going to be called from the 
@@ -333,7 +336,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			args.addAll(encodeInputs(inputTensors));
 			List<String> encOuts = encodeOutputs(outputTensors);
 			args.addAll(encOuts);
-			//main(new String[] {modelSource, encodeInputs(inputTensors).get(0), encodeOutputs(outputTensors).get(0)});
+			//main(new String[] {modelSource, encodeInputs(inputTensors).get(0), encOuts.get(0), encOuts.get(1)});
+			System.out.println(args);
 			ProcessBuilder builder = new ProcessBuilder(args);
 			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
 			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -344,18 +348,28 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	    		throw new RunModelException("Error executing the Pytorch model in"
 	        			+ " a separate process. The process was not terminated correctly."
 	        			+ System.lineSeparator() + readProcessStringOutput(process));
-	        for (int i = 0; i < outputTensors.size(); i ++)
-	        	outputTensors.get(i).setData(SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA((String) decodeString(encOuts.get(0)).get("memoryName")));
-	        shmaList.stream().forEach(shm -> {
-				try { shm.close(); } catch (IOException e) { e.printStackTrace(); }
-			});
+	        for (int i = 0; i < outputTensors.size(); i ++) {
+	        	String name = (String) decodeString(encOuts.get(i)).get("memoryName");
+	        	outputTensors.get(i).setData(SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(name));
+	        	this.shmaNamesList = this.shmaNamesList.stream().filter(n -> !name.equals(n)).collect(Collectors.toList());
+	        	this.shmaList = this.shmaList.stream().filter(n -> !name.equals(n.getMemoryLocationName())).collect(Collectors.toList());
+	        }
+	        closeShmas();
 		} catch (Exception e) {
-			shmaList.forEach(shm -> {
-				try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
-			});
+			closeShmas();
 			closeModel();
 			throw new RunModelException(e.toString());
 		}
+	}
+	
+	private void closeShmas() {
+		shmaList.forEach(shm -> {
+			try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
+		});
+		// TODO add methos imilar to Python's shared_memory.SharedMemory(name="") in SharedArrays class in JDLL
+		this.shmaNamesList.forEach(shm -> {
+			try { SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(shm); } catch (Exception e1) { e1.printStackTrace();}
+		});
 	}
 	
 	
@@ -393,7 +407,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 				shmaList.add(shma);
 				map.put("memoryName", shma.getMemoryLocationName());
 			} else {
-				map.put("memoryName", "/shm-" + UUID.randomUUID());
+				String memName = "/shm-" + UUID.randomUUID();
+				map.put("memoryName", memName);
+				shmaNamesList.add(memName);
 			}
 			encodedOutputTensors.add(gson.toJson(map));
 	        i ++;
@@ -512,17 +528,19 @@ public class PytorchInterface implements DeepLearningEngineInterface {
      */
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
     	if (args.length == 0) {
-	    	String modelFolder = "/home/carlos/git/deep-icy/models/CebraNET Cellular Membranes in Volume SEM_08122023_020403";
-	    	String modelSourc = modelFolder + "/weights.torchscript";
+	    	String modelFolder = "/home/carlos/git/deep-icy/models/HPA Bestfitting InceptionV3_27112023_182703";
+	    	String modelSourc = modelFolder + "/bestfitting-inceptionv3-single-cell.pt";
 	    	PytorchInterface pi = new PytorchInterface();
 	    	pi.loadModel(modelFolder, modelSourc);
-	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 64, 64, 64});
-	    	Tensor<?> inp = Tensor.build("aa", "bcyxz", rai);
-	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bcyxz");
+	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 4, 128, 128});
+	    	Tensor<?> inp = Tensor.build("aa", "bcyx", rai);
+	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bcr");
+	    	Tensor<?> out2 = Tensor.buildEmptyTensor("oo", "bcr");
 	    	List<Tensor<?>> ins = new ArrayList<Tensor<?>>();
 	    	List<Tensor<?>> ous = new ArrayList<Tensor<?>>();
 	    	ins.add(inp);
 	    	ous.add(out);
+	    	ous.add(out2);
 	    	pi.run(ins, ous);
 	    	System.out.println(false);
 	    	return;
