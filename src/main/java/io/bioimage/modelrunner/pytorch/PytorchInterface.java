@@ -589,11 +589,15 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	            if (!((boolean) map.get("isInput"))) 
 	            	NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get("memoryName"));   	
 			}
+			outputNDArrays.stream().forEach(tt -> tt.close());
+			inputList.stream().forEach(tt -> tt.close());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+	    	ptInterface.closeModel();
 			throw new RunModelException(e.toString());
 		}
+    	ptInterface.closeModel();
 	}
     
     /**
