@@ -28,7 +28,9 @@ import io.bioimage.modelrunner.pytorch.tensor.NDArrayBuilder;
 import io.bioimage.modelrunner.pytorch.tensor.shm.NDArrayShmBuilder;
 import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
+import io.bioimage.modelrunner.tensor.shm.CLibrary;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
+import io.bioimage.modelrunner.tensor.shm.SharedMemoryArrayLinux;
 import io.bioimage.modelrunner.utils.CommonUtils;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgs;
@@ -60,6 +62,8 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.sun.jna.Native;
+import com.sun.jna.Pointer;
 
 import ai.djl.MalformedModelException;
 import ai.djl.engine.EngineException;
@@ -232,8 +236,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 */
 	@Override
 	public void closeModel() {
-		if (model != null) 
+		if (model != null) {
+			System.out.println("cling");
 			model.close();
+		}
+		System.out.println("null");
 		model = null;
 	}
 
@@ -333,28 +340,36 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		shmaList = new ArrayList<SharedMemoryArray>();
 		try {
 			List<String> args = getProcessCommandsWithoutArgs();
+			for (int i = 0; i < args.size(); i ++)
+				System.out.println(args.get(i));
 			args.addAll(encodeInputs(inputTensors));
 			List<String> encOuts = encodeOutputs(outputTensors);
 			args.addAll(encOuts);
-			//main(new String[] {modelSource, encodeInputs(inputTensors).get(0), encOuts.get(0), encOuts.get(1)});
-			System.out.println(args);
+			//main(new String[] {modelSource, encodeInputs(inputTensors).get(0), encOuts.get(0)});
+			System.gc();
 			ProcessBuilder builder = new ProcessBuilder(args);
 			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
 			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
 	        process = builder.start();
 	        int result = process.waitFor();
-	        process.destroy();
+	        boolean alive = process.isAlive();
 	        if (result != 0)
 	    		throw new RunModelException("Error executing the Pytorch model in"
 	        			+ " a separate process. The process was not terminated correctly."
 	        			+ System.lineSeparator() + readProcessStringOutput(process));
+	        process = null;
+	        System.gc();
 	        for (int i = 0; i < outputTensors.size(); i ++) {
 	        	String name = (String) decodeString(encOuts.get(i)).get("memoryName");
+	        	System.out.println("fffffffffddddddddddddddddddddddddddddddffff");
 	        	outputTensors.get(i).setData(SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(name));
-	        	this.shmaNamesList = this.shmaNamesList.stream().filter(n -> !name.equals(n)).collect(Collectors.toList());
-	        	this.shmaList = this.shmaList.stream().filter(n -> !name.equals(n.getMemoryLocationName())).collect(Collectors.toList());
+	        	System.out.println("fffffffffffff");
+		    	System.gc();
+	        	System.out.println("fffffffffffffw");
 	        }
+	        System.gc();
 	        closeShmas();
+	        System.gc();
 		} catch (Exception e) {
 			closeShmas();
 			closeModel();
@@ -368,7 +383,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		});
 		// TODO add methos imilar to Python's shared_memory.SharedMemory(name="") in SharedArrays class in JDLL
 		this.shmaNamesList.forEach(shm -> {
-			try { SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(shm); } catch (Exception e1) { e1.printStackTrace();}
+			try { SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(shm); } catch (Exception e1) {}
 		});
 	}
 	
@@ -528,21 +543,20 @@ public class PytorchInterface implements DeepLearningEngineInterface {
      */
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
     	if (args.length == 0) {
-	    	String modelFolder = "/home/carlos/git/deep-icy/models/HPA Bestfitting InceptionV3_27112023_182703";
-	    	String modelSourc = modelFolder + "/bestfitting-inceptionv3-single-cell.pt";
+	    	String modelFolder = "/home/carlos/git/deep-icy/models/CebraNET Cellular Membranes in Volume SEM_08122023_020403";
+	    	String modelSourc = modelFolder + "/weights.torchscript.pt";
 	    	PytorchInterface pi = new PytorchInterface();
 	    	pi.loadModel(modelFolder, modelSourc);
-	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 4, 128, 128});
-	    	Tensor<?> inp = Tensor.build("aa", "bcyx", rai);
-	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bcr");
-	    	Tensor<?> out2 = Tensor.buildEmptyTensor("oo", "bcr");
+	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 64, 64, 64});
+	    	Tensor<?> inp = Tensor.build("aa", "bczyx", rai);
+	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bczyx");
 	    	List<Tensor<?>> ins = new ArrayList<Tensor<?>>();
 	    	List<Tensor<?>> ous = new ArrayList<Tensor<?>>();
 	    	ins.add(inp);
 	    	ous.add(out);
-	    	ous.add(out2);
 	    	pi.run(ins, ous);
 	    	System.out.println(false);
+	    	System.gc();
 	    	return;
     	}
     	// Unpack the args needed
@@ -559,16 +573,19 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     				+ " - ...." + System.lineSeparator()
     				+ " - Encoded output n (if exists)" + System.lineSeparator()
     				);
+    	System.out.println("Start");
     	String modelSource = args[0];
     	if (!(new File(modelSource).isFile())) {
     		throw new IllegalArgumentException("Argument 0 of the main method, '" + modelSource + "' "
     				+ "should be the path to the wanted .pth weights file.");
     	}
+   	 	System.out.println("load");
     	PytorchInterface ptInterface = new PytorchInterface(false);
-    	
+   	 	System.out.println("load 2");
     	ptInterface.loadModel(new File(modelSource).getParent(), modelSource);
     	Gson gson = new Gson();
         Type mapType = new TypeToken<HashMap<String, Object>>() {}.getType();
+   	 	System.out.println("create manager");
     	try (NDManager manager = NDManager.newBaseManager()) {
 			// Create the input lists of engine tensors (NDArrays) and their
 			// corresponding names
@@ -578,26 +595,41 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	            if ((boolean) map.get("isInput")) 
 	            	inputList.add(NDArrayShmBuilder.buildFromShma((String) map.get("memoryName"), manager));   	
 			}
+	   	 	System.out.println("create pred");
 			// Run model
 			Predictor<NDList, NDList> predictor = ptInterface.model.newPredictor();
+	   	 	System.out.println("pred");
 			NDList outputNDArrays = predictor.predict(inputList);
 			// Fill the agnostic output tensors list with data from the inference
 			// result
+	   	 	System.out.println("outs");
 			int c = 0;
 			for (int i = 1; i < args.length; i ++) {
 	            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
-	            if (!((boolean) map.get("isInput"))) 
-	            	NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get("memoryName"));   	
+				if (!((boolean) map.get("isInput"))) {
+					SharedMemoryArray shma = NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get("memoryName"));
+	            	if (CLibrary.INSTANCE.munmap(shma.getPointer(), shma.getSize()) == -1) {
+	                    throw new RuntimeException("munmap failed. Errno: " + Native.getLastError());
+	                }
+
+	                // Close the file descriptor
+	                if (CLibrary.INSTANCE.close(((SharedMemoryArrayLinux) shma).getSharedMemoryBlock()) == -1) {
+	                    throw new RuntimeException("close failed. Errno: " + Native.getLastError());
+	                }
+				}
 			}
 			outputNDArrays.stream().forEach(tt -> tt.close());
 			inputList.stream().forEach(tt -> tt.close());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+	   	 	System.out.println("close ex");
 	    	ptInterface.closeModel();
 			throw new RunModelException(e.toString());
 		}
+   	 	System.out.println("close");
     	ptInterface.closeModel();
+   	 	System.out.println("done");
 	}
     
     /**
