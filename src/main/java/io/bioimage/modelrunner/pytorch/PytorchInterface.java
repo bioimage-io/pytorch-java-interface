@@ -28,9 +28,7 @@ import io.bioimage.modelrunner.pytorch.tensor.NDArrayBuilder;
 import io.bioimage.modelrunner.pytorch.tensor.shm.NDArrayShmBuilder;
 import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
-import io.bioimage.modelrunner.tensor.shm.CLibrary;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
-import io.bioimage.modelrunner.tensor.shm.SharedMemoryArrayLinux;
 import io.bioimage.modelrunner.utils.CommonUtils;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgs;
@@ -57,13 +55,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.sun.jna.Native;
-import com.sun.jna.Pointer;
 
 import ai.djl.MalformedModelException;
 import ai.djl.engine.EngineException;
@@ -114,6 +108,12 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	private List<SharedMemoryArray> shmaList = new ArrayList<SharedMemoryArray>();
 	
 	private List<String> shmaNamesList = new ArrayList<String>();
+
+	private static final String NAME_KEY = "name";
+	private static final String SHAPE_KEY = "shape";
+	private static final String DTYPE_KEY = "dtype";
+	private static final String IS_INPUT_KEY = "isInput";
+	private static final String MEM_NAME_KEY = "memoryName";
 
 	/**
 	 * Constructor for the interface. It is going to be called from the 
@@ -337,8 +337,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		shmaList = new ArrayList<SharedMemoryArray>();
 		try {
 			List<String> args = getProcessCommandsWithoutArgs();
-			for (int i = 0; i < args.size(); i ++)
-				System.out.println(args.get(i));
 			args.addAll(encodeInputs(inputTensors));
 			List<String> encOuts = encodeOutputs(outputTensors);
 			args.addAll(encOuts);
@@ -354,7 +352,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	        			+ System.lineSeparator() + readProcessStringOutput(process));
 	        process = null;
 	        for (int i = 0; i < outputTensors.size(); i ++) {
-	        	String name = (String) decodeString(encOuts.get(i)).get("memoryName");
+	        	String name = (String) decodeString(encOuts.get(i)).get(MEM_NAME_KEY);
 	        	outputTensors.get(i).setData(SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(name));
 	        }
 	        closeShmas();
@@ -383,11 +381,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		for (Tensor<?> tt : inputTensors) {
 			shmaList.add(SharedMemoryArray.buildNumpyLikeSHMA(tt.getData()));
 			HashMap<String, Object> map = new HashMap<String, Object>();
-			map.put("name", tt.getName());
-			map.put("shape", tt.getShape());
-			map.put("dtype", CommonUtils.getDataType(tt.getData()));
-			map.put("isInput", true);
-			map.put("memoryName", shmaList.get(i).getMemoryLocationName());
+			map.put(NAME_KEY, tt.getName());
+			map.put(SHAPE_KEY, tt.getShape());
+			map.put(DTYPE_KEY, CommonUtils.getDataType(tt.getData()));
+			map.put(IS_INPUT_KEY, true);
+			map.put(MEM_NAME_KEY, shmaList.get(i).getMemoryLocationName());
 			encodedInputTensors.add(gson.toJson(map));
 	        i ++;
 		}
@@ -396,26 +394,24 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	
 	
 	private List<String> encodeOutputs(List<Tensor<?>> outputTensors) {
-		int i = 0;
 		Gson gson = new Gson();
 		List<String> encodedOutputTensors = new ArrayList<String>();
 		for (Tensor<?> tt : outputTensors) {
 			HashMap<String, Object> map = new HashMap<String, Object>();
-			map.put("name", tt.getName());
-			map.put("isInput", false);
+			map.put(NAME_KEY, tt.getName());
+			map.put(IS_INPUT_KEY, false);
 			if (!tt.isEmpty()) {
-				map.put("shape", tt.getShape());
-				map.put("dtype", CommonUtils.getDataType(tt.getData()));
+				map.put(SHAPE_KEY, tt.getShape());
+				map.put(DTYPE_KEY, CommonUtils.getDataType(tt.getData()));
 				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(tt.getData());
 				shmaList.add(shma);
-				map.put("memoryName", shma.getMemoryLocationName());
+				map.put(MEM_NAME_KEY, shma.getMemoryLocationName());
 			} else {
-				String memName = "/shm-" + UUID.randomUUID();
-				map.put("memoryName", memName);
+				String memName = SharedMemoryArray.createShmName();
+				map.put(MEM_NAME_KEY, memName);
 				shmaNamesList.add(memName);
 			}
 			encodedOutputTensors.add(gson.toJson(map));
-	        i ++;
 		}
 		return encodedOutputTensors;
 	}
@@ -576,8 +572,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			NDList inputList = new NDList();
 			for (int i = 1; i < args.length; i ++) {
 	            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
-	            if ((boolean) map.get("isInput")) 
-	            	inputList.add(NDArrayShmBuilder.buildFromShma((String) map.get("memoryName"), manager));   	
+	            if ((boolean) map.get(IS_INPUT_KEY)) 
+	            	inputList.add(NDArrayShmBuilder.buildFromShma((String) map.get(MEM_NAME_KEY), manager));   	
 			}
 			// Run model
 			Predictor<NDList, NDList> predictor = ptInterface.model.newPredictor();
@@ -587,8 +583,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			int c = 0;
 			for (int i = 1; i < args.length; i ++) {
 	            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
-				if (!((boolean) map.get("isInput"))) {
-					NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get("memoryName"));
+				if (!((boolean) map.get(IS_INPUT_KEY))) {
+					NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get(MEM_NAME_KEY));
 				}
 			}
 			outputNDArrays.stream().forEach(tt -> tt.close());

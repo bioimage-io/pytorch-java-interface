@@ -23,58 +23,35 @@ package io.bioimage.modelrunner.pytorch.tensor.shm;
 
 import io.bioimage.modelrunner.numpy.DecodeNumpy;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
-import io.bioimage.modelrunner.tensor.Tensor;
-import io.bioimage.modelrunner.tensor.Utils;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
-import io.bioimage.modelrunner.utils.CommonUtils;
-import net.imglib2.Cursor;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.blocks.PrimitiveBlocks;
-import net.imglib2.img.Img;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.Type;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.ByteType;
-import net.imglib2.type.numeric.integer.IntType;
-import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Cast;
-import net.imglib2.util.Util;
-import net.imglib2.view.Views;
 
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
 
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
 import ai.djl.ndarray.types.Shape;
 
 /**
- * A Pytorch {@link NDArray} builder for {@link Img} and
- * {@link io.bioimage.modelrunner.tensor.Tensor} objects.
+ * A Pytorch {@link NDArray} builder from shared memory objects
  * 
  * @author Carlos Garcia Lopez de Haro
  */
 public class NDArrayShmBuilder {
 
 	/**
-	 * Creates a {@link NDArray} from a given {@link RandomAccessibleInterval}.
+	 * Creates a {@link NDArray} from a given the name of a shared memory segment that contains an array
+	 * of bytes following the npy format
 	 * 
 	 * @param memoryName
 	 * 	name of the shared memory segment where the data is stored
 	 * @param manager
 	 *  {@link NDManager} needed to create NDArrays
-	 * @return The {@link NDArray} built from the {@link RandomAccessibleInterval}.
-	 * @throws IllegalArgumentException if the {@link RandomAccessibleInterval} is not supported
+	 * @return The {@link NDArray} built from the shared memory segment
+	 * @throws IllegalArgumentException if the data type is not supported by {@link NDArray}
 	 */
 	public static NDArray buildFromShma(String memoryName, NDManager manager) throws IllegalArgumentException
 	{
