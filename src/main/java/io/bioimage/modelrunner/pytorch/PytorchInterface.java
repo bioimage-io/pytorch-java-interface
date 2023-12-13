@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -337,10 +338,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		shmaList = new ArrayList<SharedMemoryArray>();
 		try {
 			List<String> args = getProcessCommandsWithoutArgs();
-			args.addAll(encodeInputs(inputTensors));
+			List<String> encIns = encodeInputs(inputTensors);
+			args.addAll(modifyForWinCmd(encIns));
 			List<String> encOuts = encodeOutputs(outputTensors);
-			args.addAll(encOuts);
-			//main(new String[] {modelSource, encodeInputs(inputTensors).get(0), encOuts.get(0)});
+			args.addAll(modifyForWinCmd(encOuts));
+			//main(new String[] {modelSource, encIns.get(0), encOuts.get(0)});
 			ProcessBuilder builder = new ProcessBuilder(args);
 			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
 			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -371,6 +373,15 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		this.shmaNamesList.forEach(shm -> {
 			try { SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(shm); } catch (Exception e1) {}
 		});
+	}
+	
+	private static List<String> modifyForWinCmd(List<String> ins){
+		if (!PlatformDetection.isWindows())
+			return ins;
+		List<String> newIns = new ArrayList<String>();
+		for (String ii : ins)
+			newIns.add("\"" + ii.replace("\"", "\\\"") + "\"");
+		return newIns;
 	}
 	
 	
@@ -408,6 +419,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 				map.put(MEM_NAME_KEY, shma.getNameForPython());
 			} else {
 				String memName = SharedMemoryArray.createShmName();
+				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(memName, null);
+				shmaList.add(shma);
 				map.put(MEM_NAME_KEY, memName);
 				shmaNamesList.add(memName);
 			}
@@ -527,11 +540,12 @@ public class PytorchInterface implements DeepLearningEngineInterface {
      */
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
     	if (args.length == 0) {
-	    	String modelFolder = "/home/carlos/git/deep-icy/models/CebraNET Cellular Membranes in Volume SEM_08122023_020403";
-	    	String modelSourc = modelFolder + "/weights.torchscript.pt";
+    		
+	    	String modelFolder = "C:\\Users\\angel\\OneDrive\\Documentos\\pasteur\\git\\deep-icy\\models\\Neuron Segmentation in EM (Membrane Prediction)_30102023_192607";
+	    	String modelSourc = modelFolder + "\\weights-torchscript.pt";
 	    	PytorchInterface pi = new PytorchInterface();
 	    	pi.loadModel(modelFolder, modelSourc);
-	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 64, 64, 64});
+	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 16, 144, 144});
 	    	Tensor<?> inp = Tensor.build("aa", "bczyx", rai);
 	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bczyx");
 	    	List<Tensor<?>> ins = new ArrayList<Tensor<?>>();
