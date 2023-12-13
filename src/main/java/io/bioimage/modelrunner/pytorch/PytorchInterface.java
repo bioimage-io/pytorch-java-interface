@@ -385,7 +385,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			map.put(SHAPE_KEY, tt.getShape());
 			map.put(DTYPE_KEY, CommonUtils.getDataType(tt.getData()));
 			map.put(IS_INPUT_KEY, true);
-			map.put(MEM_NAME_KEY, shmaList.get(i).getMemoryLocationName());
+			map.put(MEM_NAME_KEY, shmaList.get(i).getName());
 			encodedInputTensors.add(gson.toJson(map));
 	        i ++;
 		}
@@ -405,7 +405,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 				map.put(DTYPE_KEY, CommonUtils.getDataType(tt.getData()));
 				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(tt.getData());
 				shmaList.add(shma);
-				map.put(MEM_NAME_KEY, shma.getMemoryLocationName());
+				map.put(MEM_NAME_KEY, shma.getNameForPython());
 			} else {
 				String memName = SharedMemoryArray.createShmName();
 				map.put(MEM_NAME_KEY, memName);
