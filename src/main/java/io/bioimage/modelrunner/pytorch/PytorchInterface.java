@@ -55,7 +55,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -417,10 +416,13 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(tt.getData());
 				shmaList.add(shma);
 				map.put(MEM_NAME_KEY, shma.getNameForPython());
-			} else {
+			} else if (PlatformDetection.isWindows()){
 				String memName = SharedMemoryArray.createShmName();
 				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(memName, null);
 				shmaList.add(shma);
+				map.put(MEM_NAME_KEY, memName);
+			} else {
+				String memName = SharedMemoryArray.createShmName();
 				map.put(MEM_NAME_KEY, memName);
 				shmaNamesList.add(memName);
 			}
