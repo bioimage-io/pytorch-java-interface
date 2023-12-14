@@ -413,9 +413,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			if (!tt.isEmpty()) {
 				map.put(SHAPE_KEY, tt.getShape());
 				map.put(DTYPE_KEY, CommonUtils.getDataType(tt.getData()));
-				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(tt.getData());
+				SharedMemoryArray shma = SharedMemoryArray.buildNumpyLikeSHMA(tt.getData());
 				shmaList.add(shma);
-				map.put(MEM_NAME_KEY, shma.getNameForPython());
+				map.put(MEM_NAME_KEY, shma.getName());
 			} else if (PlatformDetection.isWindows()){
 				String memName = SharedMemoryArray.createShmName();
 				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(memName, null);
