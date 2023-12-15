@@ -114,7 +114,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	private static final String DTYPE_KEY = "dtype";
 	private static final String IS_INPUT_KEY = "isInput";
 	private static final String MEM_NAME_KEY = "memoryName";
-	
+	/**
+	 * Name without vesion of the JAR created for this library
+	 */
 	private static final String JAR_FILE_NAME = "dl-modelrunner-pytorch-";
 
 	/**
