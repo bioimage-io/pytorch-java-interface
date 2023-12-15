@@ -114,6 +114,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	private static final String DTYPE_KEY = "dtype";
 	private static final String IS_INPUT_KEY = "isInput";
 	private static final String MEM_NAME_KEY = "memoryName";
+	
+	private static final String JAR_FILE_NAME = "dl-modelrunner-pytorch-";
 
 	/**
 	 * Constructor for the interface. It is going to be called from the 
@@ -466,6 +468,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
         String codeSource = protectionDomain.getCodeSource().getLocation().getPath();
         String f_name = URLDecoder.decode(codeSource, StandardCharsets.UTF_8.toString());
 	        for (File ff : new File(f_name).getParentFile().listFiles()) {
+	        	if (ff.getName().startsWith(JAR_FILE_NAME) && !ff.getAbsolutePath().equals(f_name))
+	        		continue;
 	        	classpath += ff.getAbsolutePath() + File.pathSeparator;
 	        }
         String className = PytorchInterface.class.getName();
