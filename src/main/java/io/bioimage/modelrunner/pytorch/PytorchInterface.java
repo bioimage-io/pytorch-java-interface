@@ -452,10 +452,16 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 
         String modelrunnerPath = getPathFromClass(DeepLearningEngineInterface.class);
         String imglib2Path = getPathFromClass(NativeType.class);
+        String gsonPath = getPathFromClass(Gson.class);
+        String jnaPath = getPathFromClass(com.sun.jna.Library.class);
+        String jnaPlatformPath = getPathFromClass(com.sun.jna.platform.FileUtils.class);
         if (modelrunnerPath == null || (modelrunnerPath.endsWith("DeepLearningEngineInterface.class") 
         		&& !modelrunnerPath.contains(File.pathSeparator)))
         	modelrunnerPath = System.getProperty("java.class.path");
         String classpath =  modelrunnerPath + File.pathSeparator + imglib2Path + File.pathSeparator;
+        classpath =  classpath + gsonPath + File.pathSeparator;
+        classpath =  classpath + jnaPath + File.pathSeparator;
+        classpath =  classpath + jnaPlatformPath + File.pathSeparator;
         ProtectionDomain protectionDomain = PytorchInterface.class.getProtectionDomain();
         String codeSource = protectionDomain.getCodeSource().getLocation().getPath();
         String f_name = URLDecoder.decode(codeSource, StandardCharsets.UTF_8.toString());
