@@ -463,15 +463,16 @@ public class PytorchInterface implements DeepLearningEngineInterface {
         		&& !modelrunnerPath.contains(File.pathSeparator)))
         	modelrunnerPath = System.getProperty("java.class.path");
         String classpath =  modelrunnerPath + File.pathSeparator + imglib2Path + File.pathSeparator;
-        classpath =  classpath + gsonPath + File.pathSeparator;
-        classpath =  classpath + jnaPath + File.pathSeparator;
-        classpath =  classpath + jnaPlatformPath + File.pathSeparator;
+        //classpath =  classpath + gsonPath + File.pathSeparator;
+        //classpath =  classpath + jnaPath + File.pathSeparator;
+        //classpath =  classpath + jnaPlatformPath + File.pathSeparator;
         ProtectionDomain protectionDomain = PytorchInterface.class.getProtectionDomain();
         String codeSource = protectionDomain.getCodeSource().getLocation().getPath();
         String f_name = URLDecoder.decode(codeSource, StandardCharsets.UTF_8.toString());
+        f_name = new File(f_name).getAbsolutePath();
 	        for (File ff : new File(f_name).getParentFile().listFiles()) {
-	        	if (ff.getName().startsWith(JAR_FILE_NAME) && !ff.getAbsolutePath().equals(f_name))
-	        		continue;
+	        	//if (ff.getName().startsWith(JAR_FILE_NAME) && !ff.getAbsolutePath().equals(f_name))
+	        		//continue;
 	        	classpath += ff.getAbsolutePath() + File.pathSeparator;
 	        }
         String className = PytorchInterface.class.getName();
@@ -555,13 +556,13 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
     	if (args.length == 0) {
     		
-	    	String modelFolder = "/home/carlos/git/deep-icy/models/Neuron Segmentation in EM (Membrane Prediction)_07122023_193930";
-	    	String modelSourc = modelFolder + "/weights-torchscript.pt";
+	    	String modelFolder = "C:\\Users\\angel\\OneDrive\\Documentos\\pasteur\\git\\model-runner-java\\models\\EnhancerMitochondriaEM2D_14122023_003919";
+	    	String modelSourc = modelFolder + "\\weights-torchscript.pt";
 	    	PytorchInterface pi = new PytorchInterface();
 	    	pi.loadModel(modelFolder, modelSourc);
-	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 16, 144, 144});
-	    	Tensor<?> inp = Tensor.build("aa", "bczyx", rai);
-	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bczyx");
+	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 512, 512});
+	    	Tensor<?> inp = Tensor.build("aa", "bcyx", rai);
+	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bcyx");
 	    	List<Tensor<?>> ins = new ArrayList<Tensor<?>>();
 	    	List<Tensor<?>> ous = new ArrayList<Tensor<?>>();
 	    	ins.add(inp);
