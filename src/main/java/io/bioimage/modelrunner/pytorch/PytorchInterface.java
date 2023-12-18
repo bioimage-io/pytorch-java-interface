@@ -463,18 +463,18 @@ public class PytorchInterface implements DeepLearningEngineInterface {
         		&& !modelrunnerPath.contains(File.pathSeparator)))
         	modelrunnerPath = System.getProperty("java.class.path");
         String classpath =  modelrunnerPath + File.pathSeparator + imglib2Path + File.pathSeparator;
-        //classpath =  classpath + gsonPath + File.pathSeparator;
-        //classpath =  classpath + jnaPath + File.pathSeparator;
-        //classpath =  classpath + jnaPlatformPath + File.pathSeparator;
+        classpath =  classpath + gsonPath + File.pathSeparator;
+        classpath =  classpath + jnaPath + File.pathSeparator;
+        classpath =  classpath + jnaPlatformPath + File.pathSeparator;
         ProtectionDomain protectionDomain = PytorchInterface.class.getProtectionDomain();
         String codeSource = protectionDomain.getCodeSource().getLocation().getPath();
         String f_name = URLDecoder.decode(codeSource, StandardCharsets.UTF_8.toString());
         f_name = new File(f_name).getAbsolutePath();
-	        for (File ff : new File(f_name).getParentFile().listFiles()) {
-	        	//if (ff.getName().startsWith(JAR_FILE_NAME) && !ff.getAbsolutePath().equals(f_name))
-	        		//continue;
-	        	classpath += ff.getAbsolutePath() + File.pathSeparator;
-	        }
+        for (File ff : new File(f_name).getParentFile().listFiles()) {
+        	if (ff.getName().startsWith(JAR_FILE_NAME) && !ff.getAbsolutePath().equals(f_name))
+        		continue;
+        	classpath += ff.getAbsolutePath() + File.pathSeparator;
+        }
         String className = PytorchInterface.class.getName();
         List<String> command = new LinkedList<String>();
         command.add(padSpecialJavaBin(javaBin));
