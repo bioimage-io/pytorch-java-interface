@@ -34,9 +34,12 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Cast;
+import net.imglib2.util.Util;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -346,7 +349,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			List<String> encOuts = encodeOutputs(outputTensors);
 			args.addAll(modifyForWinCmd(encOuts));
 			//main(new String[] {modelSource, encIns.get(0), encOuts.get(0)});
-			ProcessBuilder builder = new ProcessBuilder(args);
+	        ProcessBuilder builder = new ProcessBuilder(args);
 			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
 			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
 	        process = builder.start();
@@ -358,7 +361,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	        process = null;
 	        for (int i = 0; i < outputTensors.size(); i ++) {
 	        	String name = (String) decodeString(encOuts.get(i)).get(MEM_NAME_KEY);
-	        	outputTensors.get(i).setData(SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(name));
+	        	RandomAccessibleInterval<?> rai = SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(name);
+	        	outputTensors.get(i).setData(Tensor.createCopyOfRaiInWantedDataType(Cast.unchecked(rai), Util.getTypeFromInterval(Cast.unchecked(rai))));
 	        }
 	        closeShmas();
 		} catch (Exception e) {
@@ -372,10 +376,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		shmaList.forEach(shm -> {
 			try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
 		});
-		// TODO add methos imilar to Python's shared_memory.SharedMemory(name="") in SharedArrays class in JDLL
-		this.shmaNamesList.forEach(shm -> {
+		// TODO remove / add methos imilar to Python's shared_memory.SharedMemory(name="") in SharedArrays class in JDLL
+		/*this.shmaNamesList.forEach(shm -> {
 			try { SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(shm); } catch (Exception e1) {}
 		});
+		*/
 	}
 	
 	private static List<String> modifyForWinCmd(List<String> ins){
@@ -556,11 +561,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
     	if (args.length == 0) {
     		
-	    	String modelFolder = "C:\\Users\\angel\\OneDrive\\Documentos\\pasteur\\git\\model-runner-java\\models\\EnhancerMitochondriaEM2D_14122023_003919";
-	    	String modelSourc = modelFolder + "\\weights-torchscript.pt";
+	    	String modelFolder = "/home/carlos/Pictures/DeepSupervisionUnet_07112023_172430";
+	    	String modelSourc = modelFolder + "/dsUnet.pt";
 	    	PytorchInterface pi = new PytorchInterface();
 	    	pi.loadModel(modelFolder, modelSourc);
-	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 512, 512});
+	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 3, 1024, 1024});
 	    	Tensor<?> inp = Tensor.build("aa", "bcyx", rai);
 	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bcyx");
 	    	List<Tensor<?>> ins = new ArrayList<Tensor<?>>();
@@ -586,45 +591,55 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     				+ " - ...." + System.lineSeparator()
     				+ " - Encoded output n (if exists)" + System.lineSeparator()
     				);
-    	String modelSource = args[0];
-    	if (!(new File(modelSource).isFile())) {
-    		throw new IllegalArgumentException("Argument 0 of the main method, '" + modelSource + "' "
-    				+ "should be the path to the wanted .pth weights file.");
-    	}
-    	PytorchInterface ptInterface = new PytorchInterface(false);
-    	Gson gson = new Gson();
-        Type mapType = new TypeToken<HashMap<String, Object>>() {}.getType();
-    	try (NDManager manager = NDManager.newBaseManager()) {
-        	ptInterface.loadModel(new File(modelSource).getParent(), modelSource);
-			// Create the input lists of engine tensors (NDArrays) and their
-			// corresponding names
-			NDList inputList = new NDList();
-			for (int i = 1; i < args.length; i ++) {
-	            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
-	            if ((boolean) map.get(IS_INPUT_KEY)) 
-	            	inputList.add(NDArrayShmBuilder.buildFromShma((String) map.get(MEM_NAME_KEY), manager));   	
-			}
-			// Run model
-			Predictor<NDList, NDList> predictor = ptInterface.model.newPredictor();
-			NDList outputNDArrays = predictor.predict(inputList);
-			// Fill the agnostic output tensors list with data from the inference
-			// result
-			int c = 0;
-			for (int i = 1; i < args.length; i ++) {
-	            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
-				if (!((boolean) map.get(IS_INPUT_KEY))) {
-					NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get(MEM_NAME_KEY));
+    	 try (FileWriter writer = 
+    			 new FileWriter("C:\\Users\\mouni\\OneDrive\\Desktop\\icy"
+    			 		+ "-2.4.0.0-all\\engines\\pytorch-2.0.0-2.0.0-windows-x86_64-cpu-gpu\\example.txt", false)) {
+
+             writer.write("start the processs" + System.lineSeparator()); 
+	    	String modelSource = args[0];
+	    	if (!(new File(modelSource).isFile())) {
+	    		throw new IllegalArgumentException("Argument 0 of the main method, '" + modelSource + "' "
+	    				+ "should be the path to the wanted .pth weights file.");
+	    	}
+	    	PytorchInterface ptInterface = new PytorchInterface(false);
+	    	Gson gson = new Gson();
+	        Type mapType = new TypeToken<HashMap<String, Object>>() {}.getType();
+	    	try (NDManager manager = NDManager.newBaseManager()) {
+	             writer.write("base manager" + System.lineSeparator()); 
+	        	ptInterface.loadModel(new File(modelSource).getParent(), modelSource);
+	             writer.write("model loaded" + System.lineSeparator()); 
+				// Create the input lists of engine tensors (NDArrays) and their
+				// corresponding names
+				NDList inputList = new NDList();
+				for (int i = 1; i < args.length; i ++) {
+		            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
+		            if ((boolean) map.get(IS_INPUT_KEY)) 
+		            	inputList.add(NDArrayShmBuilder.buildFromShma((String) map.get(MEM_NAME_KEY), manager));   	
 				}
+				// Run model
+				Predictor<NDList, NDList> predictor = ptInterface.model.newPredictor();
+				NDList outputNDArrays = predictor.predict(inputList);
+	             writer.write("Model run" + System.lineSeparator()); 
+				// Fill the agnostic output tensors list with data from the inference
+				// result
+				int c = 0;
+				for (int i = 1; i < args.length; i ++) {
+		            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
+					if (!((boolean) map.get(IS_INPUT_KEY))) {
+						NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get(MEM_NAME_KEY));
+					}
+				}
+				outputNDArrays.stream().forEach(tt -> tt.close());
+				inputList.stream().forEach(tt -> tt.close());
 			}
-			outputNDArrays.stream().forEach(tt -> tt.close());
-			inputList.stream().forEach(tt -> tt.close());
-		}
-		catch (Exception e) {
-			e.printStackTrace();
+			catch (Exception e) {
+	             writer.write(e.toString() + System.lineSeparator()); 
+				e.printStackTrace();
+		    	ptInterface.closeModel();
+				throw new RunModelException(e.toString());
+			}
 	    	ptInterface.closeModel();
-			throw new RunModelException(e.toString());
-		}
-    	ptInterface.closeModel();
+    	 }
 	}
     
     /**
