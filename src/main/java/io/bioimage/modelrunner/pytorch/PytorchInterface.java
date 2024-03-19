@@ -358,6 +358,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	    		throw new RunModelException("Error executing the Pytorch model in"
 	        			+ " a separate process. The process was not terminated correctly."
 	        			+ System.lineSeparator() + readProcessStringOutput(process));
+	        process.destroy();
 	        process = null;
 	        for (int i = 0; i < outputTensors.size(); i ++) {
 	        	String name = (String) decodeString(encOuts.get(i)).get(MEM_NAME_KEY);
@@ -368,14 +369,17 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		} catch (Exception e) {
 			closeShmas();
 			closeModel();
+	        System.gc();
 			throw new RunModelException(e.toString());
 		}
+        System.gc();
 	}
 	
 	private void closeShmas() {
 		shmaList.forEach(shm -> {
 			try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
 		});
+		shmaList = null;
 		// TODO remove / add methos imilar to Python's shared_memory.SharedMemory(name="") in SharedArrays class in JDLL
 		/*this.shmaNamesList.forEach(shm -> {
 			try { SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(shm); } catch (Exception e1) {}
