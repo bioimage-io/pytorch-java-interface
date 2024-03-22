@@ -23,6 +23,7 @@ package io.bioimage.modelrunner.pytorch.tensor.shm;
 
 import io.bioimage.modelrunner.numpy.DecodeNumpy;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
+import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import net.imglib2.util.Cast;
 
@@ -56,11 +57,11 @@ public class NDArrayShmBuilder {
 	public static NDArray buildFromShma(String memoryName, NDManager manager) throws IllegalArgumentException
 	{
 		
-		Map<String, Object> map = SharedMemoryArray.buildMapFromNumpyLikeSHMA(memoryName);
+		SharedMemoryArray shma = SharedMemoryArray.read(memoryName);
 
-		String dtype = (String) map.get(DecodeNumpy.DTYPE_KEY);
-		ByteBuffer data = (ByteBuffer) map.get(DecodeNumpy.DATA_KEY);
-		long[] shape = (long[]) map.get(DecodeNumpy.SHAPE_KEY);
+		String dtype = shma.getOriginalDataType();
+		ByteBuffer data = shma.getDataBuffer();
+		long[] shape = (long[]) shma.getOriginalShape();
 		Buffer buff = null;
 		if (dtype.equals("int32")) {
 			buff = data.asIntBuffer();
@@ -74,10 +75,13 @@ public class NDArrayShmBuilder {
 			throw new IllegalArgumentException("Unsupported tensor type: " + dtype);
 		}
 		NDArray ndarray = manager.create(buff, new Shape(shape));
+		if (PlatformDetection.isWindows()) {
+			try { shma.close(); } catch (IOException e) { e.printStackTrace();}
+		}
 		return ndarray;
 	}
 	
 	public static SharedMemoryArray buildShma(NDArray tensor, String memoryName) throws IOException {
-		return SharedMemoryArray.buildNumpyLikeSHMA(memoryName, Cast.unchecked(ImgLib2Builder.build(tensor)));
+		return SharedMemoryArray.createSHMAFromRAI(memoryName, Cast.unchecked(ImgLib2Builder.build(tensor)), false, true);
 	}
 }

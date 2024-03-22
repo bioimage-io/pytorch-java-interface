@@ -49,6 +49,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -108,7 +109,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	
 	private Process process;
 	
-	private List<SharedMemoryArray> shmaList = new ArrayList<SharedMemoryArray>();
+	private List<SharedMemoryArray> shmaInputList = new ArrayList<SharedMemoryArray>();
+	
+	private List<SharedMemoryArray> shmaOutputList = new ArrayList<SharedMemoryArray>();
 	
 	private List<String> shmaNamesList = new ArrayList<String>();
 
@@ -341,7 +344,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 * @throws RunModelException if there is any issue running the model
 	 */
 	public void runInterprocessing(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors) throws RunModelException {
-		shmaList = new ArrayList<SharedMemoryArray>();
+		shmaInputList = new ArrayList<SharedMemoryArray>();
+		shmaOutputList = new ArrayList<SharedMemoryArray>();
 		try {
 			List<String> args = getProcessCommandsWithoutArgs();
 			List<String> encIns = encodeInputs(inputTensors);
@@ -362,7 +366,13 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	        process = null;
 	        for (int i = 0; i < outputTensors.size(); i ++) {
 	        	String name = (String) decodeString(encOuts.get(i)).get(MEM_NAME_KEY);
-	        	RandomAccessibleInterval<?> rai = SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(name);
+	        	SharedMemoryArray shm = shmaOutputList.stream()
+	        			.filter(ss -> ss.getName().equals(name)).findFirst().orElse(null);
+	        	if (shm == null) {
+	        		shm = SharedMemoryArray.read(name);
+	        		shmaOutputList.add(shm);
+	        	}
+	        	RandomAccessibleInterval<?> rai = shm.getSharedRAI();
 	        	outputTensors.get(i).setData(Tensor.createCopyOfRaiInWantedDataType(Cast.unchecked(rai), Util.getTypeFromInterval(Cast.unchecked(rai))));
 	        }
 	        closeShmas();
@@ -376,15 +386,14 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	}
 	
 	private void closeShmas() {
-		shmaList.forEach(shm -> {
+		shmaInputList.forEach(shm -> {
 			try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
 		});
-		shmaList = null;
-		// TODO remove / add methos imilar to Python's shared_memory.SharedMemory(name="") in SharedArrays class in JDLL
-		/*this.shmaNamesList.forEach(shm -> {
-			try { SharedMemoryArray.buildImgLib2FromNumpyLikeSHMA(shm); } catch (Exception e1) {}
+		shmaInputList = null;
+		shmaOutputList.forEach(shm -> {
+			try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
 		});
-		*/
+		shmaOutputList = null;
 	}
 	
 	private static List<String> modifyForWinCmd(List<String> ins){
@@ -397,18 +406,19 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	}
 	
 	
-	private List<String> encodeInputs(List<Tensor<?>> inputTensors) {
+	private List<String> encodeInputs(List<Tensor<?>> inputTensors) throws FileAlreadyExistsException {
 		int i = 0;
 		List<String> encodedInputTensors = new ArrayList<String>();
 		Gson gson = new Gson();
 		for (Tensor<?> tt : inputTensors) {
-			shmaList.add(SharedMemoryArray.buildNumpyLikeSHMA(tt.getData()));
+			SharedMemoryArray shma = SharedMemoryArray.createSHMAFromRAI(tt.getData(), false, true);
+			shmaInputList.add(shma);
 			HashMap<String, Object> map = new HashMap<String, Object>();
 			map.put(NAME_KEY, tt.getName());
 			map.put(SHAPE_KEY, tt.getShape());
 			map.put(DTYPE_KEY, CommonUtils.getDataType(tt.getData()));
 			map.put(IS_INPUT_KEY, true);
-			map.put(MEM_NAME_KEY, shmaList.get(i).getName());
+			map.put(MEM_NAME_KEY, shma.getName());
 			encodedInputTensors.add(gson.toJson(map));
 	        i ++;
 		}
@@ -416,7 +426,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	}
 	
 	
-	private List<String> encodeOutputs(List<Tensor<?>> outputTensors) {
+	private List<String> encodeOutputs(List<Tensor<?>> outputTensors) throws FileAlreadyExistsException {
 		Gson gson = new Gson();
 		List<String> encodedOutputTensors = new ArrayList<String>();
 		for (Tensor<?> tt : outputTensors) {
@@ -426,13 +436,13 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			if (!tt.isEmpty()) {
 				map.put(SHAPE_KEY, tt.getShape());
 				map.put(DTYPE_KEY, CommonUtils.getDataType(tt.getData()));
-				SharedMemoryArray shma = SharedMemoryArray.buildNumpyLikeSHMA(tt.getData());
-				shmaList.add(shma);
+				SharedMemoryArray shma = SharedMemoryArray.createSHMAFromRAI(tt.getData(), false, true);
+				shmaOutputList.add(shma);
 				map.put(MEM_NAME_KEY, shma.getName());
 			} else if (PlatformDetection.isWindows()){
 				String memName = SharedMemoryArray.createShmName();
-				SharedMemoryArray shma = SharedMemoryArray.buildSHMA(memName, null);
-				shmaList.add(shma);
+				SharedMemoryArray shma = SharedMemoryArray.create(0);
+				shmaOutputList.add(shma);
 				map.put(MEM_NAME_KEY, memName);
 			} else {
 				String memName = SharedMemoryArray.createShmName();
@@ -595,11 +605,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     				+ " - ...." + System.lineSeparator()
     				+ " - Encoded output n (if exists)" + System.lineSeparator()
     				);
-    	 try (FileWriter writer = 
-    			 new FileWriter("C:\\Users\\mouni\\OneDrive\\Desktop\\icy"
-    			 		+ "-2.4.0.0-all\\engines\\pytorch-2.0.0-2.0.0-windows-x86_64-cpu-gpu\\example.txt", false)) {
-
-             writer.write("start the processs" + System.lineSeparator()); 
 	    	String modelSource = args[0];
 	    	if (!(new File(modelSource).isFile())) {
 	    		throw new IllegalArgumentException("Argument 0 of the main method, '" + modelSource + "' "
@@ -609,9 +614,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	    	Gson gson = new Gson();
 	        Type mapType = new TypeToken<HashMap<String, Object>>() {}.getType();
 	    	try (NDManager manager = NDManager.newBaseManager()) {
-	             writer.write("base manager" + System.lineSeparator()); 
 	        	ptInterface.loadModel(new File(modelSource).getParent(), modelSource);
-	             writer.write("model loaded" + System.lineSeparator()); 
 				// Create the input lists of engine tensors (NDArrays) and their
 				// corresponding names
 				NDList inputList = new NDList();
@@ -623,27 +626,25 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 				// Run model
 				Predictor<NDList, NDList> predictor = ptInterface.model.newPredictor();
 				NDList outputNDArrays = predictor.predict(inputList);
-	             writer.write("Model run" + System.lineSeparator()); 
 				// Fill the agnostic output tensors list with data from the inference
 				// result
 				int c = 0;
 				for (int i = 1; i < args.length; i ++) {
 		            HashMap<String, Object> map = gson.fromJson(args[i], mapType);
 					if (!((boolean) map.get(IS_INPUT_KEY))) {
-						NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get(MEM_NAME_KEY));
+						SharedMemoryArray shma = NDArrayShmBuilder.buildShma(outputNDArrays.get(c ++), (String) map.get(MEM_NAME_KEY));
+						if (PlatformDetection.isWindows()) shma.close();
 					}
 				}
 				outputNDArrays.stream().forEach(tt -> tt.close());
 				inputList.stream().forEach(tt -> tt.close());
 			}
 			catch (Exception e) {
-	             writer.write(e.toString() + System.lineSeparator()); 
 				e.printStackTrace();
 		    	ptInterface.closeModel();
 				throw new RunModelException(e.toString());
 			}
 	    	ptInterface.closeModel();
-    	 }
 	}
     
     /**
