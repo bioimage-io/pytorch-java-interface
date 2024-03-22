@@ -58,7 +58,7 @@ public class NDArrayShmBuilder {
 		SharedMemoryArray shma = SharedMemoryArray.read(memoryName);
 
 		String dtype = shma.getOriginalDataType();
-		ByteBuffer data = shma.getDataBuffer();
+		ByteBuffer data = shma.getDataBufferNoHeader();
 		long[] shape = (long[]) shma.getOriginalShape();
 		Buffer buff = null;
 		if (dtype.equals("int32")) {
