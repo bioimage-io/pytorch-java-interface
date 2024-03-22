@@ -407,7 +407,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	
 	
 	private List<String> encodeInputs(List<Tensor<?>> inputTensors) throws FileAlreadyExistsException {
-		int i = 0;
 		List<String> encodedInputTensors = new ArrayList<String>();
 		Gson gson = new Gson();
 		for (Tensor<?> tt : inputTensors) {
@@ -420,7 +419,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			map.put(IS_INPUT_KEY, true);
 			map.put(MEM_NAME_KEY, shma.getName());
 			encodedInputTensors.add(gson.toJson(map));
-	        i ++;
 		}
 		return encodedInputTensors;
 	}
@@ -575,13 +573,13 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
     	if (args.length == 0) {
     		
-	    	String modelFolder = "/home/carlos/Pictures/DeepSupervisionUnet_07112023_172430";
+	    	String modelFolder = "/home/carlos/git/deep-icy/models/DeepSupervisionUnet_07112023_172430";
 	    	String modelSourc = modelFolder + "/dsUnet.pt";
 	    	PytorchInterface pi = new PytorchInterface();
 	    	pi.loadModel(modelFolder, modelSourc);
 	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 3, 1024, 1024});
 	    	Tensor<?> inp = Tensor.build("aa", "bcyx", rai);
-	    	Tensor<?> out = Tensor.buildEmptyTensor("oo", "bcyx");
+	    	Tensor<?> out = Tensor.buildBlankTensor("oo", "bcyx", new long[] {1, 9, 1024, 1024}, new FloatType());
 	    	List<Tensor<?>> ins = new ArrayList<Tensor<?>>();
 	    	List<Tensor<?>> ous = new ArrayList<Tensor<?>>();
 	    	ins.add(inp);
