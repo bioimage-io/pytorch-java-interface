@@ -21,7 +21,6 @@
 
 package io.bioimage.modelrunner.pytorch.tensor.shm;
 
-import io.bioimage.modelrunner.numpy.DecodeNumpy;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
 import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
@@ -30,7 +29,6 @@ import net.imglib2.util.Cast;
 import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.util.Map;
 
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
