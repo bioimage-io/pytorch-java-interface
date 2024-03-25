@@ -34,8 +34,12 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Cast;
+
+import java.util.Arrays;
+
 import ai.djl.ndarray.NDArray;
 import io.bioimage.modelrunner.tensor.Utils;
+import io.bioimage.modelrunner.utils.CommonUtils;
 
 /**
 * A {@link RandomAccessibleInterval} builder for Pytorch {@link ai.djl.ndarray.NDArray} objects.
@@ -89,6 +93,9 @@ public class ImgLib2Builder {
 	 */
 	private static RandomAccessibleInterval<UnsignedByteType> buildFromTensorUByte(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
+		if (CommonUtils.int32Overflows(arrayShape, 1))
+			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
+								+ " is too big. Max number of elements per output tensor supported: " + Integer.MAX_VALUE);
 		long[] tensorShape = new long[arrayShape.length];
 		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		byte[] flatArr = tensor.toByteArray();
@@ -105,6 +112,9 @@ public class ImgLib2Builder {
 	 */
 	private static RandomAccessibleInterval<ByteType> buildFromTensorByte(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
+		if (CommonUtils.int32Overflows(arrayShape, 1))
+			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
+								+ " is too big. Max number of elements per output tensor supported: " + Integer.MAX_VALUE);
 		long[] tensorShape = new long[arrayShape.length];
 		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		byte[] flatArr = tensor.toByteArray();
@@ -121,6 +131,9 @@ public class ImgLib2Builder {
 	 */
 	private static RandomAccessibleInterval<IntType> buildFromTensorInt(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
+		if (CommonUtils.int32Overflows(arrayShape, 1))
+			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
+								+ " is too big. Max number of elements per output tensor supported: " + Integer.MAX_VALUE);
 		long[] tensorShape = new long[arrayShape.length];
 		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		int[] flatArr = tensor.toIntArray();
@@ -137,6 +150,9 @@ public class ImgLib2Builder {
 	 */
 	private static RandomAccessibleInterval<FloatType> buildFromTensorFloat(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
+		if (CommonUtils.int32Overflows(arrayShape, 1))
+			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
+								+ " is too big. Max number of elements per output tensor supported: " + Integer.MAX_VALUE);
 		long[] tensorShape = new long[arrayShape.length];
 		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		float[] flatArr = tensor.toFloatArray();
@@ -153,6 +169,9 @@ public class ImgLib2Builder {
 	 */
 	private static RandomAccessibleInterval<DoubleType> buildFromTensorDouble(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
+		if (CommonUtils.int32Overflows(arrayShape, 1))
+			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
+								+ " is too big. Max number of elements per output tensor supported: " + Integer.MAX_VALUE);
 		long[] tensorShape = new long[arrayShape.length];
 		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		double[] flatArr = tensor.toDoubleArray();
@@ -169,6 +188,9 @@ public class ImgLib2Builder {
 	 */
 	private static RandomAccessibleInterval<LongType> buildFromTensorLong(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
+		if (CommonUtils.int32Overflows(arrayShape, 1))
+			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
+								+ " is too big. Max number of elements per output tensor supported: " + Integer.MAX_VALUE);
 		long[] tensorShape = new long[arrayShape.length];
 		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
 		long[] flatArr = tensor.toLongArray();
