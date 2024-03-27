@@ -438,10 +438,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 				shmaOutputList.add(shma);
 				map.put(MEM_NAME_KEY, shma.getName());
 			} else if (PlatformDetection.isWindows()){
-				String memName = SharedMemoryArray.createShmName();
 				SharedMemoryArray shma = SharedMemoryArray.create(0);
 				shmaOutputList.add(shma);
-				map.put(MEM_NAME_KEY, memName);
+				map.put(MEM_NAME_KEY, shma.getName());
 			} else {
 				String memName = SharedMemoryArray.createShmName();
 				map.put(MEM_NAME_KEY, memName);
@@ -573,13 +572,15 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
     	if (args.length == 0) {
     		
-	    	String modelFolder = "/home/carlos/git/deep-icy/models/DeepSupervisionUnet_07112023_172430";
-	    	String modelSourc = modelFolder + "/dsUnet.pt";
+	    	String modelFolder = "C:\\Users\\carlos\\OneDrive\\Documentos\\pasteur\\git"
+	    			+ "\\deep-icy\\models\\MitchondriaEMSegmentation2D_31102023_214027";
+	    	String modelSourc = modelFolder + "\\weights-torchscript.pt";
 	    	PytorchInterface pi = new PytorchInterface();
 	    	pi.loadModel(modelFolder, modelSourc);
-	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 3, 1024, 1024});
+	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 512, 512});
 	    	Tensor<?> inp = Tensor.build("aa", "bcyx", rai);
-	    	Tensor<?> out = Tensor.buildBlankTensor("oo", "bcyx", new long[] {1, 9, 1024, 1024}, new FloatType());
+	    	Tensor<?> out = Tensor.buildBlankTensor("oo", "bcyx", new long[] {1, 2, 512, 512}, new FloatType());
+	    	//Tensor<?> out = Tensor.buildEmptyTensor("oo", "bcyx");
 	    	List<Tensor<?>> ins = new ArrayList<Tensor<?>>();
 	    	List<Tensor<?>> ous = new ArrayList<Tensor<?>>();
 	    	ins.add(inp);
