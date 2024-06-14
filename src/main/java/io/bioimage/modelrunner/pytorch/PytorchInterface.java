@@ -20,6 +20,9 @@
  */
 package io.bioimage.modelrunner.pytorch;
 
+import io.bioimage.modelrunner.bioimageio.BioimageioRepo;
+import io.bioimage.modelrunner.bioimageio.download.DownloadTracker;
+import io.bioimage.modelrunner.bioimageio.download.DownloadTracker.TwoParameterConsumer;
 import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
 import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
@@ -39,7 +42,6 @@ import net.imglib2.util.Util;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -568,13 +570,16 @@ public class PytorchInterface implements DeepLearningEngineInterface {
      * @throws LoadModelException if there is any error loading the model
      * @throws IOException	if there is any error reading or writing any file or with the paths
      * @throws RunModelException	if there is any error running the model
+	 * @throws InterruptedException 
      */
-    public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
+    public static void main(String[] args) throws LoadModelException, IOException, RunModelException, InterruptedException {
     	if (args.length == 0) {
-    		
-	    	String modelFolder = "C:\\Users\\carlos\\OneDrive\\Documentos\\pasteur\\git"
-	    			+ "\\deep-icy\\models\\MitchondriaEMSegmentation2D_31102023_214027";
-	    	String modelSourc = modelFolder + "\\weights-torchscript.pt";
+    		// Create an instance of the BioimageRepo object
+    		BioimageioRepo br = BioimageioRepo.connect();
+    		String aa = br.downloadByNickame("hiding-blowfish", "models");
+
+	    	String modelFolder = aa;
+	    	String modelSourc = modelFolder + "/weights-torchscript.pt";
 	    	PytorchInterface pi = new PytorchInterface();
 	    	pi.loadModel(modelFolder, modelSourc);
 	    	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 1, 512, 512});
