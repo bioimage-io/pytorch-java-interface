@@ -37,4 +37,4 @@ jobs:
     - name: Run Specific Class (Unix)
       shell: bash
       run: |
-        java -cp $JAR_PATH io.bioimage.modelrunner.pytorch.PytorchInterface
+        java -cp dl-modelrunner-pytorch-0.4.3-SNAPSHOT.jar io.bioimage.modelrunner.pytorch.PytorchInterface
