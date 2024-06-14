@@ -30,11 +30,9 @@ jobs:
         mvn clean install org.apache.maven.plugins:maven-shade-plugin:3.2.4:shade -Dshade.mainClass=io.bioimage.modelrunner.pytorch.PytorchInterface
 
     - name: Write Version to File
-      shell: bash
       run: |
         echo "$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" > version.txt
         echo "JAR_PATH=target/dl-modelrunner-$(cat version.txt).jar" >> $GITHUB_ENV
-      shell: bash
 
     - name: Run Specific Class (Unix)
       shell: bash
