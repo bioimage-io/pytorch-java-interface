@@ -1,4 +1,4 @@
-name: build
+name: test pytorch on mac
 
 on:
   push:
