@@ -32,9 +32,9 @@ jobs:
     - name: Write Version to File
       run: |
         echo "$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" > version.txt
-        echo "JAR_PATH=target/dl-modelrunner-$(cat version.txt).jar" >> $GITHUB_ENV
+        echo "JAR_PATH=target/dl-modelrunner-pytorch-$(cat version.txt).jar" >> $GITHUB_ENV
 
     - name: Run Specific Class (Unix)
       shell: bash
       run: |
-        java -cp dl-modelrunner-pytorch-0.4.3-SNAPSHOT.jar io.bioimage.modelrunner.pytorch.PytorchInterface
+        java -cp $JAR_PATH io.bioimage.modelrunner.pytorch.PytorchInterface
