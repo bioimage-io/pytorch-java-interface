@@ -24,39 +24,30 @@ import io.bioimage.modelrunner.apposed.appose.Service;
 import io.bioimage.modelrunner.apposed.appose.Types;
 import io.bioimage.modelrunner.apposed.appose.Service.Task;
 import io.bioimage.modelrunner.apposed.appose.Service.TaskStatus;
-import io.bioimage.modelrunner.bioimageio.BioimageioRepo;
-import io.bioimage.modelrunner.bioimageio.download.DownloadTracker;
-import io.bioimage.modelrunner.bioimageio.download.DownloadTracker.TwoParameterConsumer;
 import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
 import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
+import io.bioimage.modelrunner.pytorch.shm.ShmBuilder;
+import io.bioimage.modelrunner.pytorch.shm.TensorBuilder;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
 import io.bioimage.modelrunner.pytorch.tensor.NDArrayBuilder;
-import io.bioimage.modelrunner.pytorch.tensor.shm.NDArrayShmBuilder;
 import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.utils.CommonUtils;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Cast;
 import net.imglib2.util.Util;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,15 +61,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import ai.djl.MalformedModelException;
-import ai.djl.engine.EngineException;
 import ai.djl.inference.Predictor;
+import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
-import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
@@ -271,7 +259,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		}
 	}
 	
-	protected void runFromShmas(List<String> inputs, List<String> outputs) throws IOException {
+	protected void runFromShmas(List<String> inputs, List<String> outputs) throws IOException, RunModelException {
 		try (NDManager manager = NDManager.newBaseManager()) {
 			// Create the input lists of engine tensors (NDArrays) and their
 			// corresponding names
@@ -279,7 +267,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			for (String ee : inputs) {
 				Map<String, Object> decoded = Types.decode(ee);
 				SharedMemoryArray shma = SharedMemoryArray.read((String) decoded.get(MEM_NAME_KEY));
-				NDArray inT = io.bioimage.modelrunner.tensorflow.v2.api030.shm.TensorBuilder.build(shma);
+				NDArray inT = TensorBuilder.build(shma, manager);
 				if (PlatformDetection.isWindows()) shma.close();
 				inputList.add(inT);
 			}
@@ -470,7 +458,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		model = null;
 	}
 	
-	/**
+	/** TODO remove
 	 * Create the arguments needed to execute Pytorch in another 
 	 * process with the corresponding tensors
 	 * @return the command used to call the separate process
