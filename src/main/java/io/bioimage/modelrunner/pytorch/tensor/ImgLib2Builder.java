@@ -84,13 +84,6 @@ public class ImgLib2Builder {
 		}
 	}
 
-	/**
-	 * Builds a {@link Img} from a unsigned byte-typed {@link NDArray}.
-	 * 
-	 * @param tensor 
-	 * 	The {@link NDArray} data is read from.
-	 * @return The {@link Img} built from the tensor of type {@link UnsignedByteType}.
-	 */
 	private static RandomAccessibleInterval<UnsignedByteType> buildFromTensorUByte(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 1))
@@ -103,13 +96,6 @@ public class ImgLib2Builder {
 		return Utils.transpose(rai);
 	}
 
-	/**
-	 * Builds a {@link Img} from a signed byte-typed {@link NDArray}.
-	 * 
-	 * @param tensor 
-	 * 	The {@link NDArray} data is read from.
-	 * @return The {@link Img} built from the tensor of type {@link ByteType}.
-	 */
 	private static RandomAccessibleInterval<ByteType> buildFromTensorByte(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 1))
@@ -122,13 +108,6 @@ public class ImgLib2Builder {
 		return Utils.transpose(rai);
 	}
 
-	/**
-	 * Builds a {@link RandomAccessibleInterval} from a signed integer-typed {@link NDArray}.
-	 * 
-	 * @param tensor 
-	 * 	The {@link NDArray} data is read from.
-	 * @return The {@link RandomAccessibleInterval} built from the tensor of type {@link IntType}.
-	 */
 	private static RandomAccessibleInterval<IntType> buildFromTensorInt(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 1))
@@ -141,13 +120,6 @@ public class ImgLib2Builder {
 		return Utils.transpose(rai);
 	}
 
-	/**
-	 * Builds a {@link RandomAccessibleInterval} from a signed float-typed {@link NDArray}.
-	 * 
-	 * @param tensor 
-	 * 	The {@link NDArray} data is read from.
-	 * @return The {@link RandomAccessibleInterval} built from the tensor of type {@link FloatType}.
-	 */
 	private static RandomAccessibleInterval<FloatType> buildFromTensorFloat(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 1))
@@ -160,13 +132,6 @@ public class ImgLib2Builder {
 		return Utils.transpose(rai);
 	}
 
-	/**
-	 * Builds a {@link RandomAccessibleInterval} from a signed double-typed {@link NDArray}.
-	 * 
-	 * @param tensor 
-	 * 	The {@link NDArray} data is read from.
-	 * @return The {@link RandomAccessibleInterval} built from the tensor of type {@link DoubleType}.
-	 */
 	private static RandomAccessibleInterval<DoubleType> buildFromTensorDouble(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 1))
@@ -179,13 +144,6 @@ public class ImgLib2Builder {
 		return Utils.transpose(rai);
 	}
 
-	/**
-	 * Builds a {@link RandomAccessibleInterval} from a signed long-typed {@link NDArray}.
-	 * 
-	 * @param tensor 
-	 * 	The {@link NDArray} data is read from.
-	 * @return The {@link RandomAccessibleInterval} built from the tensor of type {@link DoubleType}.
-	 */
 	private static RandomAccessibleInterval<LongType> buildFromTensorLong(NDArray tensor) {
 		long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 1))
