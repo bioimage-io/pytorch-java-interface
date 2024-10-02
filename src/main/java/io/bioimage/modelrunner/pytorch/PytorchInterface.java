@@ -290,6 +290,10 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 * MEthod only used in MacOS Intel and Windows systems that makes all the arrangements
 	 * to create another process, communicate the model info and tensors to the other 
 	 * process and then retrieve the results of the other process
+	 * @param <T>
+	 * 	ImgLib2 data type of the input tensors
+	 * @param <R>
+	 * 	ImgLib2 data type of the output tensors, it can be the same as the input tensors' data type
 	 * @param inputTensors
 	 * 	tensors that are going to be run on the model
 	 * @param outputTensors
@@ -339,6 +343,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 * Create the list a list of output tensors agnostic to the Deep Learning
 	 * engine that can be readable by the model-runner
 	 * 
+	 * @param <T>
+	 * 	ImgLib2 data type of the output tensors
 	 * @param outputNDArrays 
 	 * 	an NDList containing NDArrays (tensors)
 	 * @param outputTensors 

@@ -55,6 +55,8 @@ public class NDArrayBuilder {
 	 * Creates a {@link NDArray} from a given {@link Tensor}. The {@link Tensor}
 	 * contains the data and info(dimensions, dataype) necessary to build a {@link NDArray}
 	 * 
+	 * @param <T>
+	 * 	ImgLib2 data type of the output tensors
 	 * @param tensor 
 	 * 	The {@link Tensor} that will be copied into a {@link NDArray}
 	 * @param manager
