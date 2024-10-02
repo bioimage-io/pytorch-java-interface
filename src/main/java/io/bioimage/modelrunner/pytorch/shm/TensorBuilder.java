@@ -142,9 +142,9 @@ public final class TensorBuilder {
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
 		FloatBuffer floatBuff = buff.asFloatBuffer();
-		float[] floatArray = new float[floatBuff.capacity()];
-		floatBuff.get(floatArray);
-		NDArray ndarray = manager.create(floatBuff.array(), new Shape(ogShape));
+		//float[] floatArray = new float[floatBuff.capacity()];
+		//floatBuff.get(floatArray);
+		NDArray ndarray = manager.create(floatBuff, new Shape(ogShape));
 		return ndarray;
 	}
 
