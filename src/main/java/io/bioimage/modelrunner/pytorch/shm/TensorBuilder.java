@@ -55,7 +55,7 @@ public final class TensorBuilder {
 	 * 	the {@link SharedMemoryArray} that is going to be converted into
 	 *  a {@link NDArray} tensor
 	 * @param manager
-	 * 	DJL manager that controls the creation and destruction of {@link NDArrays}
+	 * 	DJL manager that controls the creation and destruction of {@link NDArray}s
 	 * @return the Pytorch {@link NDArray} as the one stored in the shared memory segment
 	 * @throws IllegalArgumentException if the type of the {@link SharedMemoryArray}
 	 *  is not supported
