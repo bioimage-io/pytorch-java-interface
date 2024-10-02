@@ -468,48 +468,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		model = null;
 	}
 	
-	/** TODO remove
-	 * Create the arguments needed to execute Pytorch in another 
-	 * process with the corresponding tensors
-	 * @return the command used to call the separate process
-	 * @throws IOException if the command needed to execute interprocessing is too long
-	 * @throws URISyntaxException if there is any error with the URIs retrieved from the classes
-	 */
-	private List<String> getProcessCommandsWithoutArgs2() throws IOException, URISyntaxException {
-		String javaHome = System.getProperty("java.home");
-        String javaBin = javaHome +  File.separator + "bin" + File.separator + "java";
-
-        String modelrunnerPath = getPathFromClass(DeepLearningEngineInterface.class);
-        String imglib2Path = getPathFromClass(NativeType.class);
-        String gsonPath = getPathFromClass(Gson.class);
-        String jnaPath = getPathFromClass(com.sun.jna.Library.class);
-        String jnaPlatformPath = getPathFromClass(com.sun.jna.platform.FileUtils.class);
-        if (modelrunnerPath == null || (modelrunnerPath.endsWith("DeepLearningEngineInterface.class") 
-        		&& !modelrunnerPath.contains(File.pathSeparator)))
-        	modelrunnerPath = System.getProperty("java.class.path");
-        String classpath =  modelrunnerPath + File.pathSeparator + imglib2Path + File.pathSeparator;
-        classpath =  classpath + gsonPath + File.pathSeparator;
-        classpath =  classpath + jnaPath + File.pathSeparator;
-        classpath =  classpath + jnaPlatformPath + File.pathSeparator;
-        ProtectionDomain protectionDomain = PytorchInterface.class.getProtectionDomain();
-        String codeSource = protectionDomain.getCodeSource().getLocation().getPath();
-        String f_name = URLDecoder.decode(codeSource, StandardCharsets.UTF_8.toString());
-        f_name = new File(f_name).getAbsolutePath();
-        for (File ff : new File(f_name).getParentFile().listFiles()) {
-        	if (ff.getName().startsWith(JAR_FILE_NAME) && !ff.getAbsolutePath().equals(f_name))
-        		continue;
-        	classpath += ff.getAbsolutePath() + File.pathSeparator;
-        }
-        String className = PytorchInterface.class.getName();
-        List<String> command = new LinkedList<String>();
-        command.add(padSpecialJavaBin(javaBin));
-        command.add("-cp");
-        command.add(classpath);
-        command.add(className);
-        command.add(modelSource);
-        return command;
-	}
-	
 	/**
 	 * Create the arguments needed to execute tensorflow 2 in another 
 	 * process with the corresponding tensors
