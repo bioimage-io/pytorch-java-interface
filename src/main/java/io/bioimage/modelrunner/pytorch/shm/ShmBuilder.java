@@ -61,18 +61,24 @@ public final class ShmBuilder
      */
 	public static void build(NDArray  tensor, String memoryName) throws IllegalArgumentException, IOException
     {
+		System.out.println(tensor.getDataType().asNumpy());
 		switch (tensor.getDataType())
         {
             case UINT8:
             	buildFromTensorUByte(tensor, memoryName);
+            	break;
             case INT32:
             	buildFromTensorInt(tensor, memoryName);
+            	break;
             case FLOAT32:
             	buildFromTensorFloat(tensor, memoryName);
+            	break;
             case FLOAT64:
             	buildFromTensorDouble(tensor, memoryName);
+            	break;
             case INT64:
             	buildFromTensorLong(tensor, memoryName);
+            	break;
             default:
                 throw new IllegalArgumentException("Unsupported tensor type: " + tensor.getDataType().asNumpy());
         }
