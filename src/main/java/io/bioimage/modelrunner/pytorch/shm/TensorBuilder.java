@@ -93,7 +93,7 @@ public final class TensorBuilder {
 		if (!tensor.isNumpyFormat())
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
-		NDArray ndarray = manager.create(buff.array(), new Shape(ogShape));
+		NDArray ndarray = manager.create(buff, new Shape(ogShape));
 		return ndarray;
 	}
 
@@ -108,9 +108,7 @@ public final class TensorBuilder {
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
 		IntBuffer intBuff = buff.asIntBuffer();
-		int[] intArray = new int[intBuff.capacity()];
-		intBuff.get(intArray);
-		NDArray ndarray = manager.create(intBuff.array(), new Shape(ogShape));
+		NDArray ndarray = manager.create(intBuff, new Shape(ogShape));
 		return ndarray;
 	}
 
@@ -125,9 +123,7 @@ public final class TensorBuilder {
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
 		LongBuffer longBuff = buff.asLongBuffer();
-		long[] longArray = new long[longBuff.capacity()];
-		longBuff.get(longArray);
-		NDArray ndarray = manager.create(longBuff.array(), new Shape(ogShape));
+		NDArray ndarray = manager.create(longBuff, new Shape(ogShape));
 		return ndarray;
 	}
 
@@ -142,8 +138,6 @@ public final class TensorBuilder {
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
 		FloatBuffer floatBuff = buff.asFloatBuffer();
-		//float[] floatArray = new float[floatBuff.capacity()];
-		//floatBuff.get(floatArray);
 		NDArray ndarray = manager.create(floatBuff, new Shape(ogShape));
 		return ndarray;
 	}
@@ -159,9 +153,7 @@ public final class TensorBuilder {
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
 		DoubleBuffer doubleBuff = buff.asDoubleBuffer();
-		double[] doubleArray = new double[doubleBuff.capacity()];
-		doubleBuff.get(doubleArray);
-		NDArray ndarray = manager.create(doubleBuff.array(), new Shape(ogShape));
+		NDArray ndarray = manager.create(doubleBuff, new Shape(ogShape));
 		return ndarray;
 	}
 }
