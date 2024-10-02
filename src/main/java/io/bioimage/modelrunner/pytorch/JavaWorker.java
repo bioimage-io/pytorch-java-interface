@@ -87,7 +87,7 @@ public class JavaWorker {
 		this.reportLaunch();
 		try {
 			if (script.equals("loadModel")) {
-				pi.loadModel((String) inputs.get("modelFolder"), null);
+				pi.loadModel((String) inputs.get("modelFolder"), (String) inputs.get("modelSource"));
 			} else if (script.equals("inference")) {
 				pi.runFromShmas((List<String>) inputs.get("inputs"), (List<String>) inputs.get("outputs"));
 			} else if (script.equals("close")) {

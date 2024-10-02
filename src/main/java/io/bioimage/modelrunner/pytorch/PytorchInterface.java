@@ -100,6 +100,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	 */
 	private ZooModel<NDList, NDList> model;
 	
+	private String modelFolder;
+	
 	private String modelSource;
 	
 	private boolean interprocessing = true;
@@ -155,6 +157,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	public void loadModel(String modelFolder, String modelSource)
 		throws LoadModelException
 	{
+		this.modelFolder = modelFolder;
 		this.modelSource = modelSource;
 		if (interprocessing) {
 			try {
@@ -188,7 +191,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	
 	private void launchModelLoadOnProcess() throws IOException, InterruptedException {
 		HashMap<String, Object> args = new HashMap<String, Object>();
-		args.put("modelFolder", modelSource);
+		args.put("modelFolder", modelFolder);
+		args.put("modelSource", modelSource);
 		Task task = runner.task("loadModel", args);
 		task.waitFor();
 		if (task.status == TaskStatus.CANCELED)
