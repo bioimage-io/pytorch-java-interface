@@ -390,7 +390,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		List<String> encodedInputTensors = new ArrayList<String>();
 		Gson gson = new Gson();
 		for (Tensor<?> tt : inputTensors) {
-			SharedMemoryArray shma = SharedMemoryArray.createSHMAFromRAI(tt.getData(), false, true);
+			SharedMemoryArray shma = SharedMemoryArray.createSHMAFromRAI(tt.getData(), true, true);
 			shmaInputList.add(shma);
 			HashMap<String, Object> map = new HashMap<String, Object>();
 			map.put(NAME_KEY, tt.getName());
@@ -415,7 +415,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			if (!tt.isEmpty()) {
 				map.put(SHAPE_KEY, tt.getShape());
 				map.put(DTYPE_KEY, CommonUtils.getDataTypeFromRAI(tt.getData()));
-				SharedMemoryArray shma = SharedMemoryArray.createSHMAFromRAI(tt.getData(), false, true);
+				SharedMemoryArray shma = SharedMemoryArray.createSHMAFromRAI(tt.getData(), true, true);
 				shmaOutputList.add(shma);
 				map.put(MEM_NAME_KEY, shma.getName());
 			} else if (PlatformDetection.isWindows()){

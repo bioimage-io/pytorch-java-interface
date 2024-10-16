@@ -88,7 +88,7 @@ public final class ShmBuilder
 		if (CommonUtils.int32Overflows(arrayShape, 1))
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per ubyte output tensor supported: " + Integer.MAX_VALUE / 1);
-        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new UnsignedByteType(), false, true);
+        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new UnsignedByteType(), true, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
         if (PlatformDetection.isWindows()) shma.close();
     }
@@ -100,7 +100,7 @@ public final class ShmBuilder
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per int output tensor supported: " + Integer.MAX_VALUE / 4);
 
-        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new IntType(), false, true);
+        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new IntType(), true, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
         if (PlatformDetection.isWindows()) shma.close();
     }
@@ -112,7 +112,7 @@ public final class ShmBuilder
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per float output tensor supported: " + Integer.MAX_VALUE / 4);
 
-        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), false, true);
+        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), true, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
         if (PlatformDetection.isWindows()) shma.close();
     }
@@ -124,7 +124,7 @@ public final class ShmBuilder
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per double output tensor supported: " + Integer.MAX_VALUE / 8);
 
-        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new DoubleType(), false, true);
+        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new DoubleType(), true, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
         if (PlatformDetection.isWindows()) shma.close();
     }
@@ -137,7 +137,7 @@ public final class ShmBuilder
 					+ " is too big. Max number of elements per long output tensor supported: " + Integer.MAX_VALUE / 8);
 		
 
-        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new LongType(), false, true);
+        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new LongType(), true, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
         if (PlatformDetection.isWindows()) shma.close();
     }
