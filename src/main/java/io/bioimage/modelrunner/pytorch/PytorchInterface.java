@@ -495,6 +495,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
         command.add("-cp");
         command.add(classpath);
         command.add(className);
+        System.out.println(command);
         return command;
 	}
 	
