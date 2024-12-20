@@ -198,11 +198,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		if (task.status == TaskStatus.CANCELED)
 			throw new RuntimeException();
 		else if (task.status == TaskStatus.FAILED)
-			throw new RuntimeException();
+			throw new RuntimeException(task.error);
 		else if (task.status == TaskStatus.CRASHED) {
 			this.runner.close();
 			runner = null;
-			throw new RuntimeException();
+			throw new RuntimeException(task.error);
 		}
 	}
 	
@@ -323,11 +323,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			if (task.status == TaskStatus.CANCELED)
 				throw new RuntimeException();
 			else if (task.status == TaskStatus.FAILED)
-				throw new RuntimeException();
+				throw new RuntimeException(task.error);
 			else if (task.status == TaskStatus.CRASHED) {
 				this.runner.close();
 				runner = null;
-				throw new RuntimeException();
+				throw new RuntimeException(task.error);
 			}
 			for (int i = 0; i < outputTensors.size(); i ++) {
 	        	String name = (String) Types.decode(encOuts.get(i)).get(MEM_NAME_KEY);
@@ -451,11 +451,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			if (task.status == TaskStatus.CANCELED)
 				throw new RuntimeException();
 			else if (task.status == TaskStatus.FAILED)
-				throw new RuntimeException();
+				throw new RuntimeException(task.error);
 			else if (task.status == TaskStatus.CRASHED) {
 				this.runner.close();
 				runner = null;
-				throw new RuntimeException();
+				throw new RuntimeException(task.error);
 			}
 			this.runner.close();
 			this.runner = null;
