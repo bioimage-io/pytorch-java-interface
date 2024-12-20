@@ -27,6 +27,7 @@ import io.bioimage.modelrunner.utils.CommonUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.UUID;
 
 import ai.djl.ndarray.NDArray;
 import net.imglib2.type.numeric.integer.IntType;
@@ -116,7 +117,7 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), false, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
-    	DecodeNumpy.saveNpy("/home/carlos/git/mm_out.npy", Cast.unchecked(shma.getSharedRAI()));
+    	DecodeNumpy.saveNpy("/home/carlos/git/mm_out" + UUID.randomUUID().toString() + ".npy", Cast.unchecked(shma.getSharedRAI()));
         if (PlatformDetection.isWindows()) shma.close();
     }
 
