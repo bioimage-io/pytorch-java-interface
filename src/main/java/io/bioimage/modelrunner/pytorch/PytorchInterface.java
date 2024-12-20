@@ -275,6 +275,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			for (String ee : inputs) {
 				Map<String, Object> decoded = Types.decode(ee);
 				SharedMemoryArray shma = SharedMemoryArray.read((String) decoded.get(MEM_NAME_KEY));
+	        	DecodeNumpy.saveNpy("/home/carlos/git/mm_in.npy", Cast.unchecked(shma.getSharedRAI()));
 				NDArray inT = TensorBuilder.build(shma, manager);
 				if (PlatformDetection.isWindows()) shma.close();
 				inputList.add(inT);
@@ -339,7 +340,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	        		shmaOutputList.add(shm);
 	        	}
 	        	RandomAccessibleInterval<?> rai = shm.getSharedRAI();
-	        	DecodeNumpy.saveNpy("/home/carlos/git/mm.npy", Cast.unchecked(rai));
 	        	outputTensors.get(i).setData(Tensor.createCopyOfRaiInWantedDataType(Cast.unchecked(rai), Util.getTypeFromInterval(Cast.unchecked(rai))));
 	        }
 		} catch (Exception e) {

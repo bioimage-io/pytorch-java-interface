@@ -20,6 +20,7 @@
  */
 package io.bioimage.modelrunner.pytorch.shm;
 
+import io.bioimage.modelrunner.numpy.DecodeNumpy;
 import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.utils.CommonUtils;
@@ -33,6 +34,7 @@ import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Cast;
 
 /**
  * A utility class that converts {@link NDArray}s into {@link SharedMemoryArray}s for
@@ -114,6 +116,7 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), false, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
+    	DecodeNumpy.saveNpy("/home/carlos/git/mm_out.npy", Cast.unchecked(shma.getSharedRAI()));
         if (PlatformDetection.isWindows()) shma.close();
     }
 
