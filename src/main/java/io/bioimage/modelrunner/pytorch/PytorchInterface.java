@@ -27,6 +27,7 @@ import io.bioimage.modelrunner.apposed.appose.Service.TaskStatus;
 import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
 import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
+import io.bioimage.modelrunner.numpy.DecodeNumpy;
 import io.bioimage.modelrunner.pytorch.shm.ShmBuilder;
 import io.bioimage.modelrunner.pytorch.shm.TensorBuilder;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
@@ -338,6 +339,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	        		shmaOutputList.add(shm);
 	        	}
 	        	RandomAccessibleInterval<?> rai = shm.getSharedRAI();
+	        	DecodeNumpy.saveNpy("/home/carlos/git/mm.npy", Cast.unchecked(rai));
 	        	outputTensors.get(i).setData(Tensor.createCopyOfRaiInWantedDataType(Cast.unchecked(rai), Util.getTypeFromInterval(Cast.unchecked(rai))));
 	        }
 		} catch (Exception e) {
