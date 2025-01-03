@@ -27,7 +27,6 @@ import io.bioimage.modelrunner.apposed.appose.Service.TaskStatus;
 import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
 import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
-import io.bioimage.modelrunner.numpy.DecodeNumpy;
 import io.bioimage.modelrunner.pytorch.shm.ShmBuilder;
 import io.bioimage.modelrunner.pytorch.shm.TensorBuilder;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
@@ -60,7 +59,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.google.gson.Gson;
 
@@ -276,7 +274,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			for (String ee : inputs) {
 				Map<String, Object> decoded = Types.decode(ee);
 				SharedMemoryArray shma = SharedMemoryArray.read((String) decoded.get(MEM_NAME_KEY));
-	        	DecodeNumpy.saveNpy("/home/carlos/git/mm_in" + UUID.randomUUID().toString() + ".npy", Cast.unchecked(shma.getSharedRAI()));
 				NDArray inT = TensorBuilder.build(shma, manager);
 				if (PlatformDetection.isWindows()) shma.close();
 				inputList.add(inT);
