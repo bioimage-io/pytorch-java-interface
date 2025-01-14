@@ -59,6 +59,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import com.google.gson.Gson;
 
@@ -145,7 +146,13 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		String[] argArr = new String[args.size()];
 		args.toArray(argArr);
 
-		return new Service(new File("."), argArr);
+		Service service = new Service(new File("."), argArr);
+		service.setEnvVar("CUDA_HOME", null);
+		service.setEnvVar("CUDA_PATH", null);
+		service.setEnvVar("LD_LIBRARY_PATH", null);
+		service.setEnvVar("DYLD_LIBRARY_PATH", null);
+		service.setEnvVar("PATH", null);
+		return service;
     }
 
 	/**

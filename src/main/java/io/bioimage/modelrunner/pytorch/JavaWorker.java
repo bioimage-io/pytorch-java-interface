@@ -30,6 +30,7 @@ public class JavaWorker {
 	 */
 	public static void main(String[] args) {
 		System.clearProperty("PYTORCH_FLAVOR");
+		System.clearProperty("java.library.path");
     	
     	try(Scanner scanner = new Scanner(System.in)){
     		PytorchInterface pi;
