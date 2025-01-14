@@ -29,6 +29,7 @@ public class JavaWorker {
 	 * 	args of the parent process
 	 */
 	public static void main(String[] args) {
+		System.clearProperty("PYTORCH_FLAVOR");
     	
     	try(Scanner scanner = new Scanner(System.in)){
     		PytorchInterface pi;
