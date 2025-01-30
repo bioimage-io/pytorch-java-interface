@@ -572,6 +572,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
         return javaBin;
 	}
 	
+	/**
 	public static <T extends RealType<T> & NativeType<T>, R extends RealType<R> & NativeType<R>> void
 	main(String[] args) throws IOException, URISyntaxException, LoadModelException, RunModelException {
 		PytorchInterface pi = new PytorchInterface(false);
@@ -595,4 +596,5 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		DecodeNumpy.saveNpy(folder + "/out_yes_pre.npy", ous.get(0).getData());
 		
 	}
+	*/
 }
