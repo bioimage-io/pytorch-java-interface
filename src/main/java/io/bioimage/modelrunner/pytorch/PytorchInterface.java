@@ -166,8 +166,6 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	public void loadModel(String modelFolder, String modelSource)
 		throws LoadModelException
 	{
-		System.out.println("[DEBUG 1]: " + ai.djl.util.Utils.getenv("PATH"));
-		System.out.println("[DEBUG 2]: " + Platform.fromSystem("pytorch"));
 		this.modelFolder = modelFolder;
 		this.modelSource = modelSource;
 		if (interprocessing) {
@@ -178,6 +176,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			}
 			return;
 		}
+		System.out.println("[DEBUG 1]: " + ai.djl.util.Utils.getenv("PATH"));
+		System.out.println("[DEBUG 2]: " + Platform.fromSystem("pytorch"));
 		try {
 			String modelName = getModelName(modelSource);
 			// Find the URL that corresponds to the file
