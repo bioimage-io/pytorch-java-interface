@@ -27,6 +27,7 @@ import io.bioimage.modelrunner.apposed.appose.Service.TaskStatus;
 import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
 import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
+import io.bioimage.modelrunner.numpy.DecodeNumpy;
 import io.bioimage.modelrunner.pytorch.shm.ShmBuilder;
 import io.bioimage.modelrunner.pytorch.shm.TensorBuilder;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
@@ -36,6 +37,7 @@ import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.utils.CommonUtils;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Cast;
@@ -71,6 +73,7 @@ import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.TranslateException;
+import ai.djl.util.Platform;
 
 /**
  * This class implements an interface that allows the main plugin to interact in
@@ -163,6 +166,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	public void loadModel(String modelFolder, String modelSource)
 		throws LoadModelException
 	{
+		System.out.println("[DEBUG 1]: " + ai.djl.util.Utils.getenv("PATH"));
+		System.out.println("[DEBUG 2]: " + Platform.fromSystem("pytorch"));
 		this.modelFolder = modelFolder;
 		this.modelSource = modelSource;
 		if (interprocessing) {
@@ -565,5 +570,29 @@ public class PytorchInterface implements DeepLearningEngineInterface {
         	}
         }
         return javaBin;
+	}
+	
+	public static <T extends RealType<T> & NativeType<T>, R extends RealType<R> & NativeType<R>> void
+	main(String[] args) throws IOException, URISyntaxException, LoadModelException, RunModelException {
+		PytorchInterface pi = new PytorchInterface(false);
+		String folder = "/home/carlos/git/deepimagej-plugin/models/DeepBacs Segmentation Boundary Model_29012025_162730";
+		String wt = folder + "/44a0b00b-f171-4fa2-9c39-160e610e9496.pt";
+		String npy = folder + "/cfdcff5e-c4e4-4baf-826f-b453751a139d_raw_test_tensor_.npy";
+		pi.loadModel(folder, wt);
+		
+		RandomAccessibleInterval<T> in = DecodeNumpy.loadNpy(npy);
+
+		ArrayList<Tensor<T>> ins = new ArrayList<Tensor<T>>();
+		ArrayList<Tensor<R>> ous = new ArrayList<Tensor<R>>();
+		Tensor<T> inT = Tensor.build("ff", "bcyx", (RandomAccessibleInterval<T>) in);
+		Tensor<R> ouT = (Tensor<R>) Tensor.build("gg", "bcyx", ArrayImgs.floats(new long[] {1, 2, 256, 256}));
+
+		ins.add(inT);
+		ous.add(ouT);
+		
+		pi.run(Cast.unchecked(ins), Cast.unchecked(ous));
+		
+		DecodeNumpy.saveNpy(folder + "/out_yes_pre.npy", ous.get(0).getData());
+		
 	}
 }
