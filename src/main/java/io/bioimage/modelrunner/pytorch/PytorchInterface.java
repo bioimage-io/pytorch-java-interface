@@ -150,10 +150,16 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 
 		Service service = new Service(new File("."), argArr);
 		service.setEnvVar("CUDA_HOME", null);
+		service.setEnvVar("cuda_home", null);
+		service.setEnvVar("Cuda_home", null);
 		service.setEnvVar("CUDA_PATH", null);
+		service.setEnvVar("Cuda_path", null);
+		service.setEnvVar("cuda_path", null);
 		service.setEnvVar("LD_LIBRARY_PATH", null);
 		service.setEnvVar("DYLD_LIBRARY_PATH", null);
 		service.setEnvVar("PATH", null);
+		service.setEnvVar("path", null);
+		service.setEnvVar("Path", null);
 		return service;
     }
 
