@@ -245,8 +245,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	}
 
 	@Override
-	public <T extends RealType<T> & NativeType<T>, R extends RealType<R> & NativeType<R>> List<RandomAccessibleInterval<R>> inference(
-			List<RandomAccessibleInterval<T>> inputs) throws RunModelException {
+	public <T extends RealType<T> & NativeType<T>, R extends RealType<R> & NativeType<R>> 
+	List<RandomAccessibleInterval<R>> inference(List<RandomAccessibleInterval<T>> inputs) throws RunModelException {
 		if (interprocessing) {
 			return runInterprocessing(inputs);
 		}
@@ -523,7 +523,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
 		});
 		shmaOutputList = null;
-		closeInterprocess();
+		if (interprocessing)
+			closeInterprocess();
 	}
 	
 	
