@@ -16,6 +16,8 @@ public class JavaWorker {
 	
 	private static LinkedHashMap<String, Object> tasks = new LinkedHashMap<String, Object>();
 	
+	private Map<String, Object> outputs;
+	
 	private final String uuid;
 	
 	private final PytorchInterface pi;
@@ -90,10 +92,18 @@ public class JavaWorker {
 		try {
 			if (script.equals("loadModel")) {
 				pi.loadModel((String) inputs.get("modelFolder"), (String) inputs.get("modelSource"));
-			} else if (script.equals("inference")) {
+			} else if (script.equals("run")) {
 				pi.runFromShmas((List<String>) inputs.get("inputs"), (List<String>) inputs.get("outputs"));
+			} else if (script.equals("inference")) {
+				List<String> encodedOutputs = pi.inferenceFromShmas((List<String>) inputs.get("inputs"));
+				outputs = new HashMap<String, Object>();
+				HashMap<String, List<String>> out = new HashMap<String, List<String>>();
+				out.put("encoded", encodedOutputs);
+				outputs.put("outputs", out);
 			} else if (script.equals("close")) {
 				pi.closeModel();
+			} else if (script.equals("closeTensors")) {
+				pi.closeFromInterp();
 			}
 		} catch(Exception | Error ex) {
 			this.fail(Types.stackTrace(ex));
@@ -111,7 +121,7 @@ public class JavaWorker {
 	}
 	
 	private void reportCompletion() {
-		respond(ResponseType.COMPLETION, null);
+		respond(ResponseType.COMPLETION, outputs);
 	}
 	
 	private void update(String message, Integer current, Integer maximum) {

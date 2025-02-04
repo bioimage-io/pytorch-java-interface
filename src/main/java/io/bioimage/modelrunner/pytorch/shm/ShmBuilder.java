@@ -58,31 +58,47 @@ public final class ShmBuilder
      * @throws IllegalArgumentException if the data type of the tensor is not supported
      * @throws IOException if there is any error creating the shared memory array
      */
-	public static void build(NDArray  tensor, String memoryName) throws IllegalArgumentException, IOException
+	public static void build(NDArray tensor, String memoryName) throws IllegalArgumentException, IOException
+    {
+		build(tensor, memoryName, true);
+    }
+
+    /**
+     * Create a {@link SharedMemoryArray} from a {@link NDArray}
+     * @param tensor
+     * 	the tensor to be passed into the other process through the shared memory
+     * @param memoryName
+     * 	the name of the memory region where the tensor is going to be copied
+     * @param close
+     * 	for windows, whether to close the shm once it has been copied
+     * @throws IllegalArgumentException if the data type of the tensor is not supported
+     * @throws IOException if there is any error creating the shared memory array
+     */
+	public static void build(NDArray tensor, String memoryName, boolean close) throws IllegalArgumentException, IOException
     {
 		switch (tensor.getDataType())
         {
             case UINT8:
-            	buildFromTensorUByte(tensor, memoryName);
+            	buildFromTensorUByte(tensor, memoryName, close);
             	break;
             case INT32:
-            	buildFromTensorInt(tensor, memoryName);
+            	buildFromTensorInt(tensor, memoryName, close);
             	break;
             case FLOAT32:
-            	buildFromTensorFloat(tensor, memoryName);
+            	buildFromTensorFloat(tensor, memoryName, close);
             	break;
             case FLOAT64:
-            	buildFromTensorDouble(tensor, memoryName);
+            	buildFromTensorDouble(tensor, memoryName, close);
             	break;
             case INT64:
-            	buildFromTensorLong(tensor, memoryName);
+            	buildFromTensorLong(tensor, memoryName, close);
             	break;
             default:
                 throw new IllegalArgumentException("Unsupported tensor type: " + tensor.getDataType().asNumpy());
         }
     }
 
-    private static void buildFromTensorUByte(NDArray tensor, String memoryName) throws IOException
+    private static void buildFromTensorUByte(NDArray tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 1))
@@ -90,10 +106,10 @@ public final class ShmBuilder
 					+ " is too big. Max number of elements per ubyte output tensor supported: " + Integer.MAX_VALUE / 1);
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new UnsignedByteType(), false, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 
-    private static void buildFromTensorInt(NDArray tensor, String memoryName) throws IOException
+    private static void buildFromTensorInt(NDArray tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 4))
@@ -102,10 +118,10 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new IntType(), false, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 
-    private static void buildFromTensorFloat(NDArray tensor, String memoryName) throws IOException
+    private static void buildFromTensorFloat(NDArray tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 4))
@@ -114,10 +130,10 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), false, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 
-    private static void buildFromTensorDouble(NDArray tensor, String memoryName) throws IOException
+    private static void buildFromTensorDouble(NDArray tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 8))
@@ -126,10 +142,10 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new DoubleType(), false, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 
-    private static void buildFromTensorLong(NDArray tensor, String memoryName) throws IOException
+    private static void buildFromTensorLong(NDArray tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.getShape().getShape();
 		if (CommonUtils.int32Overflows(arrayShape, 8))
@@ -139,6 +155,6 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new LongType(), false, true);
         shma.getDataBufferNoHeader().put(tensor.toByteArray());
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 }
