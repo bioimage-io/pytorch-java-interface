@@ -16,7 +16,7 @@ public class JavaWorker {
 	
 	private static LinkedHashMap<String, Object> tasks = new LinkedHashMap<String, Object>();
 	
-	private Map<String, Object> outputs;
+	private Map<String, Object> outputs = new HashMap<String, Object>();
 	
 	private final String uuid;
 	
@@ -96,7 +96,6 @@ public class JavaWorker {
 				pi.runFromShmas((List<String>) inputs.get("inputs"), (List<String>) inputs.get("outputs"));
 			} else if (script.equals("inference")) {
 				List<String> encodedOutputs = pi.inferenceFromShmas((List<String>) inputs.get("inputs"));
-				outputs = new HashMap<String, Object>();
 				HashMap<String, List<String>> out = new HashMap<String, List<String>>();
 				out.put("encoded", encodedOutputs);
 				outputs.put("outputs", out);
@@ -142,7 +141,7 @@ public class JavaWorker {
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("task", uuid);
 		response.put("responseType", responseType);
-		if (args != null)
+		if (args != null && args.keySet().size() > 0)
 			response.putAll(args);
 		try {
 			System.out.println(Types.encode(response));
