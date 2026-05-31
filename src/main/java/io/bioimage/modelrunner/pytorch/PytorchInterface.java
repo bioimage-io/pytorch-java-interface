@@ -147,19 +147,22 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		List<String> args = getProcessCommandsWithoutArgs();
 		String[] argArr = new String[args.size()];
 		args.toArray(argArr);
+		
+		Map<String, String> envars = new HashMap<String, String>();
+		envars.put("CUDA_HOME", null);
+		envars.put("cuda_home", null);
+		envars.put("Cuda_home", null);
+		envars.put("CUDA_PATH", null);
+		envars.put("Cuda_path", null);
+		envars.put("cuda_path", null);
+		envars.put("LD_LIBRARY_PATH", null);
+		envars.put("DYLD_LIBRARY_PATH", null);
+		envars.put("PATH", null);
+		envars.put("path", null);
+		envars.put("Path", null);
+		
 
-		Service service = new Service(new File("."), argArr);
-		service.setEnvVar("CUDA_HOME", null);
-		service.setEnvVar("cuda_home", null);
-		service.setEnvVar("Cuda_home", null);
-		service.setEnvVar("CUDA_PATH", null);
-		service.setEnvVar("Cuda_path", null);
-		service.setEnvVar("cuda_path", null);
-		service.setEnvVar("LD_LIBRARY_PATH", null);
-		service.setEnvVar("DYLD_LIBRARY_PATH", null);
-		service.setEnvVar("PATH", null);
-		service.setEnvVar("path", null);
-		service.setEnvVar("Path", null);
+		Service service = new Service(new File("."), envars, argArr);
 		return service;
     }
 
