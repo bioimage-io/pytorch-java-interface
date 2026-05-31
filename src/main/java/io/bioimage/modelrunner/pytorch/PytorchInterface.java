@@ -23,6 +23,10 @@ package io.bioimage.modelrunner.pytorch;
 import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
 import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
+import io.bioimage.modelrunner.javaworker.NoGroovyJavaService;
+import io.bioimage.modelrunner.javaworker.NoGroovyMessages;
+import io.bioimage.modelrunner.javaworker.NoGroovyTask;
+import io.bioimage.modelrunner.javaworker.NoGroovyTask.TaskStatus;
 import io.bioimage.modelrunner.pytorch.shm.ShmBuilder;
 import io.bioimage.modelrunner.pytorch.shm.TensorBuilder;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
@@ -55,12 +59,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.apposed.appose.Service;
-import org.apposed.appose.Service.Task;
-import org.apposed.appose.Service.TaskStatus;
-import org.apposed.appose.TaskException;
-import org.apposed.appose.util.Messages;
 
 import com.google.gson.Gson;
 
@@ -111,7 +109,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
     /**
      * Process where the model is being loaded and executed
      */
-    Service runner;
+    NoGroovyJavaService runner;
 	
 	private List<SharedMemoryArray> shmaInputList = new ArrayList<SharedMemoryArray>();
 	
@@ -143,10 +141,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		this(true);
     }
     
-    private Service getRunner() throws IOException, URISyntaxException {
+    private NoGroovyJavaService getRunner() throws IOException, URISyntaxException {
 		List<String> args = getProcessCommandsWithoutArgs();
-		String[] argArr = new String[args.size()];
-		args.toArray(argArr);
 		
 		Map<String, String> envars = new HashMap<String, String>();
 		envars.put("CUDA_HOME", "");
@@ -162,7 +158,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		envars.put("Path", "");
 		
 
-		Service service = new Service(new File("."), envars, argArr);
+		NoGroovyJavaService service = new NoGroovyJavaService(new File("."), envars, args);
 		return service;
     }
 
@@ -180,8 +176,8 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		if (interprocessing) {
 			try {
 				launchModelLoadOnProcess();
-			} catch (IOException | InterruptedException | TaskException e) {
-				throw new LoadModelException(Messages.stackTrace(e));
+			} catch (IOException | InterruptedException e) {
+				throw new LoadModelException(NoGroovyMessages.stackTrace(e));
 			}
 			return;
 		}
@@ -205,15 +201,15 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		catch (Exception e) {
 			e.printStackTrace();
 			Utils.managePytorchExceptions(e);
-			throw new LoadModelException("Error loading a Pytorch model", Messages.stackTrace(e));
+			throw new LoadModelException("Error loading a Pytorch model", NoGroovyMessages.stackTrace(e));
 		}
 	}
 	
-	private void launchModelLoadOnProcess() throws IOException, InterruptedException, TaskException {
+	private void launchModelLoadOnProcess() throws IOException, InterruptedException {
 		HashMap<String, Object> args = new HashMap<String, Object>();
 		args.put("modelFolder", modelFolder);
 		args.put("modelSource", modelSource);
-		Task task = runner.task("loadModel", args);
+		NoGroovyTask task = runner.task("loadModel", args);
 		task.waitFor();
 		if (task.status == TaskStatus.CANCELED)
 			throw new RuntimeException();
@@ -273,7 +269,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			return outs;
 		}
 		catch (TranslateException e) {
-			throw new RunModelException(Messages.stackTrace(e));
+			throw new RunModelException(NoGroovyMessages.stackTrace(e));
 		}
 	}
 
@@ -310,7 +306,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			fillOutputTensors(outputNDArrays, outputTensors);
 		}
 		catch (TranslateException e) {
-			throw new RunModelException(Messages.stackTrace(e));
+			throw new RunModelException(NoGroovyMessages.stackTrace(e));
 		}
 	}
 	
@@ -320,7 +316,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			// corresponding names
 			NDList inputList = new NDList();
 			for (String ee : inputs) {
-				Map<String, Object> decoded = Messages.decode(ee);
+				Map<String, Object> decoded = NoGroovyMessages.decode(ee);
 				SharedMemoryArray shma = SharedMemoryArray.read((String) decoded.get(MEM_NAME_KEY));
 				NDArray inT = TensorBuilder.build(shma, manager);
 				if (PlatformDetection.isWindows()) shma.close();
@@ -332,12 +328,12 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 
 			int c = 0;
 			for (String ee : outputs) {
-				Map<String, Object> decoded = Messages.decode(ee);
+				Map<String, Object> decoded = NoGroovyMessages.decode(ee);
 				ShmBuilder.build(outputNDArrays.get(c ++), (String) decoded.get(MEM_NAME_KEY));
 			}
 		}
 		catch (TranslateException e) {
-			throw new RunModelException(Messages.stackTrace(e));
+			throw new RunModelException(NoGroovyMessages.stackTrace(e));
 		}
 	}
 	
@@ -347,7 +343,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			// corresponding names
 			NDList inputList = new NDList();
 			for (String ee : inputs) {
-				Map<String, Object> decoded = Messages.decode(ee);
+				Map<String, Object> decoded = NoGroovyMessages.decode(ee);
 				SharedMemoryArray shma = SharedMemoryArray.read((String) decoded.get(MEM_NAME_KEY));
 				NDArray inT = TensorBuilder.build(shma, manager);
 				if (PlatformDetection.isWindows()) shma.close();
@@ -366,7 +362,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			return shmaNamesList;
 		}
 		catch (TranslateException e) {
-			throw new RunModelException(Messages.stackTrace(e));
+			throw new RunModelException(NoGroovyMessages.stackTrace(e));
 		}
 	}
 	
@@ -381,7 +377,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		args.put("outputs", encOuts);
 
 		try {
-			Task task = runner.task("run", args);
+			NoGroovyTask task = runner.task("run", args);
 			task.waitFor();
 			if (task.status == TaskStatus.CANCELED)
 				throw new RuntimeException();
@@ -393,7 +389,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 				throw new RuntimeException(task.error);
 			}
 			for (int i = 0; i < outputTensors.size(); i ++) {
-	        	String name = (String) Messages.decode(encOuts.get(i)).get(MEM_NAME_KEY);
+	        	String name = (String) NoGroovyMessages.decode(encOuts.get(i)).get(MEM_NAME_KEY);
 	        	SharedMemoryArray shm = shmaOutputList.stream()
 	        			.filter(ss -> ss.getName().equals(name)).findFirst().orElse(null);
 	        	if (shm == null) {
@@ -407,7 +403,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			closeShmas();
 			if (e instanceof RunModelException)
 				throw (RunModelException) e;
-			throw new RunModelException(Messages.stackTrace(e));
+			throw new RunModelException(NoGroovyMessages.stackTrace(e));
 		}
 		closeShmas();
 	}
@@ -431,7 +427,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		args.put("inputs", encIns);
 
 		try {
-			Task task = runner.task("inference", args);
+			NoGroovyTask task = runner.task("inference", args);
 			task.waitFor();
 			if (task.status == TaskStatus.CANCELED)
 				throw new RuntimeException();
@@ -446,7 +442,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			List<String> outputs = (List<String>) task.outputs.get("encoded");
 			List<RandomAccessibleInterval<R>> rais = new ArrayList<RandomAccessibleInterval<R>>();
 			for (String out : outputs) {
-	        	String name = (String) Messages.decode(out).get(MEM_NAME_KEY);
+	        	String name = (String) NoGroovyMessages.decode(out).get(MEM_NAME_KEY);
 	        	SharedMemoryArray shm = SharedMemoryArray.read(name);
 	        	RandomAccessibleInterval<R> rai = shm.getSharedRAI();
 	        	rais.add(Tensor.createCopyOfRaiInWantedDataType(Cast.unchecked(rai), Util.getTypeFromInterval(Cast.unchecked(rai))));
@@ -458,13 +454,13 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 			closeShmas();
 			if (e instanceof RunModelException)
 				throw (RunModelException) e;
-			throw new RunModelException(Messages.stackTrace(e));
+			throw new RunModelException(NoGroovyMessages.stackTrace(e));
 		}
 	}
 	
 	private void closeInterprocess() throws RunModelException {
 		try {
-			Task task = runner.task("closeTensors");
+			NoGroovyTask task = runner.task("closeTensors");
 			task.waitFor();
 			if (task.status == TaskStatus.CANCELED)
 				throw new RuntimeException();
@@ -478,7 +474,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		} catch (Exception e) {
 			if (e instanceof RunModelException)
 				throw (RunModelException) e;
-			throw new RunModelException(Messages.stackTrace(e));
+			throw new RunModelException(NoGroovyMessages.stackTrace(e));
 		}
 	}
 
@@ -584,12 +580,12 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	@Override
 	public void closeModel() {
 		if (this.interprocessing && runner != null) {
-			Task task;
+			NoGroovyTask task;
 			try {
 				task = runner.task("close");
 				task.waitFor();
-			} catch (TaskException | InterruptedException e) {
-				throw new RuntimeException(Messages.stackTrace(e));
+			} catch (IOException | InterruptedException e) {
+				throw new RuntimeException(NoGroovyMessages.stackTrace(e));
 			}
 			if (task.status == TaskStatus.CANCELED)
 				throw new RuntimeException();
