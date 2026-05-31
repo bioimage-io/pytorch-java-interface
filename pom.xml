@@ -144,11 +144,6 @@
 			<artifactId>dl-modelrunner</artifactId>
 			<version>${dl-modelrunner.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.apposed</groupId>
-			<artifactId>appose</artifactId>
-			<version>0.11.0</version>
-		</dependency>
 		<!--  Dependencies for DJL Pytorch, START -->
 		<dependency>
 			<groupId>ai.djl</groupId>
