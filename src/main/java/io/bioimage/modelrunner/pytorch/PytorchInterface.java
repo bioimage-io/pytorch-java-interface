@@ -23,6 +23,7 @@ package io.bioimage.modelrunner.pytorch;
 import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
 import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
+import io.bioimage.modelrunner.numpy.DecodeNumpy;
 import io.bioimage.modelrunner.pytorch.shm.ShmBuilder;
 import io.bioimage.modelrunner.pytorch.shm.TensorBuilder;
 import io.bioimage.modelrunner.pytorch.tensor.ImgLib2Builder;
@@ -32,6 +33,7 @@ import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.utils.CommonUtils;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Cast;
@@ -149,17 +151,17 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		args.toArray(argArr);
 		
 		Map<String, String> envars = new HashMap<String, String>();
-		envars.put("CUDA_HOME", null);
-		envars.put("cuda_home", null);
-		envars.put("Cuda_home", null);
-		envars.put("CUDA_PATH", null);
-		envars.put("Cuda_path", null);
-		envars.put("cuda_path", null);
-		envars.put("LD_LIBRARY_PATH", null);
-		envars.put("DYLD_LIBRARY_PATH", null);
-		envars.put("PATH", null);
-		envars.put("path", null);
-		envars.put("Path", null);
+		envars.put("CUDA_HOME", "");
+		envars.put("cuda_home", "");
+		envars.put("Cuda_home", "");
+		envars.put("CUDA_PATH", "");
+		envars.put("Cuda_path", "");
+		envars.put("cuda_path", "");
+		envars.put("LD_LIBRARY_PATH", "");
+		envars.put("DYLD_LIBRARY_PATH", "");
+		envars.put("PATH", "");
+		envars.put("path", "");
+		envars.put("Path", "");
 		
 
 		Service service = new Service(new File("."), envars, argArr);
@@ -707,10 +709,11 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 	/**
 	public static <T extends RealType<T> & NativeType<T>, R extends RealType<R> & NativeType<R>> void
 	main(String[] args) throws IOException, URISyntaxException, LoadModelException, RunModelException {
-		PytorchInterface pi = new PytorchInterface(false);
-		String folder = "/home/carlos/git/deepimagej-plugin/models/DeepBacs Segmentation Boundary Model_29012025_162730";
-		String wt = folder + "/44a0b00b-f171-4fa2-9c39-160e610e9496.pt";
-		String npy = folder + "/cfdcff5e-c4e4-4baf-826f-b453751a139d_raw_test_tensor_.npy";
+		PytorchInterface pi = new PytorchInterface();
+		try {
+		String folder = "/home/carlos/git/deep-icy/models/LiveCellSegmentationBoundaryModel_31052026_140513";
+		String wt = folder + "/weights-torchscript.pt";
+		String npy = folder + "/test_input_0.npy";
 		pi.loadModel(folder, wt);
 		
 		RandomAccessibleInterval<T> in = DecodeNumpy.loadNpy(npy);
@@ -718,7 +721,7 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		ArrayList<Tensor<T>> ins = new ArrayList<Tensor<T>>();
 		ArrayList<Tensor<R>> ous = new ArrayList<Tensor<R>>();
 		Tensor<T> inT = Tensor.build("ff", "bcyx", (RandomAccessibleInterval<T>) in);
-		Tensor<R> ouT = (Tensor<R>) Tensor.build("gg", "bcyx", ArrayImgs.floats(new long[] {1, 2, 256, 256}));
+		Tensor<R> ouT = (Tensor<R>) Tensor.build("gg", "bcyx", ArrayImgs.floats(new long[] {1, 2, 512, 512}));
 
 		ins.add(inT);
 		ous.add(ouT);
@@ -726,7 +729,9 @@ public class PytorchInterface implements DeepLearningEngineInterface {
 		pi.run(Cast.unchecked(ins), Cast.unchecked(ous));
 		
 		DecodeNumpy.saveNpy(folder + "/out_yes_pre.npy", ous.get(0).getData());
-		
+		} catch (Exception ex) {
+		}
+		pi.closeModel();
 	}
 	*/
 }
